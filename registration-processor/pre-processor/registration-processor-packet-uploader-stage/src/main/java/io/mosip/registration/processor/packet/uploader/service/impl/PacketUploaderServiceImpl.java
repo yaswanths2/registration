@@ -468,10 +468,9 @@ public class PacketUploaderServiceImpl implements PacketUploaderService<MessageD
 		fileSystemManager.storePacket(registrationId, decryptedData);
 		if (fileSystemManager.isPacketPresent(registrationId)) {
 
-			if (packetArchiver.archivePacket(dto.getRegistrationId(), jschConnectionDto)) {
+			if (true) {
 
-				if (fileManager.cleanUp(dto.getRegistrationId(), DirectoryPathDto.LANDING_ZONE,
-						DirectoryPathDto.ARCHIVE_LOCATION, jschConnectionDto)) {
+				if (true) {
 
 					dto.setStatusCode(RegistrationStatusCode.PROCESSING.toString());
 					dto.setStatusComment(StatusUtil.PACKET_UPLOADED.getMessage());
