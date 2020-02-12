@@ -83,7 +83,7 @@ public class PacketUploaderStage extends MosipVerticleAPIManager {
 	 */
 	private void routes(MosipRouter router) {
 		router.post(contextPath + "/securezone");
-		router.handler(this::processURL, this::failure);
+		router.handler(this::processURL, this::processPacket, this::failure);
 
 	}
 
@@ -114,7 +114,7 @@ public class PacketUploaderStage extends MosipVerticleAPIManager {
 		messageDTO.setRid(obj.getString("rid"));
 		messageDTO = packetUploaderService.validateAndUploadPacket(messageDTO.getRid(),
 				this.getClass().getSimpleName());
-		if (messageDTO.getIsValid()) {
+		/*if (messageDTO.getIsValid()) {
 			sendMessage(messageDTO);
 			this.setResponse(ctx,
 					"Packet with registrationId '" + obj.getString("rid") + "' has been forwarded to next stage");
@@ -128,8 +128,19 @@ public class PacketUploaderStage extends MosipVerticleAPIManager {
 					"Packet with registrationId '" + obj.getString("rid") + "' has not been uploaded to file System",
 					null, null);
 
-		}
+		}*/
 
+	}
+
+	private void processPacket(RoutingContext routingContext) {
+		JsonObject obj = routingContext.getBodyAsJson();
+
+		MessageDTO messageDTO = new MessageDTO();
+		messageDTO.setMessageBusAddress(MessageBusAddress.PACKET_UPLOADER_IN);
+		messageDTO.setInternalError(Boolean.FALSE);
+		messageDTO.setIsValid(obj.getBoolean("isValid"));
+		messageDTO.setRid(obj.getString("rid"));
+		this.setResponse(routingContext, "");
 	}
 
 	/*
