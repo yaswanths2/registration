@@ -140,7 +140,7 @@ public class PacketUploaderStage extends MosipVerticleAPIManager {
 		messageDTO.setInternalError(Boolean.FALSE);
 		messageDTO.setIsValid(obj.getBoolean("isValid"));
 		messageDTO.setRid(obj.getString("rid"));
-		this.setResponse(routingContext, "");
+		this.setResponse(routingContext, "The packet with rid " + messageDTO.getRid() + " has been received");
 	}
 
 	/*
