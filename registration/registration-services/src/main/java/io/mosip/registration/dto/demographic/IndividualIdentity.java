@@ -7,9 +7,6 @@ import java.util.Map;
 
 import org.assertj.core.util.Arrays;
 
-import org.springframework.stereotype.Component;
-
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
@@ -22,7 +19,6 @@ import lombok.EqualsAndHashCode;
  * @author Balaji Sridharan
  * @since 1.0.0
  */
-@Component
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class IndividualIdentity extends Identity {
