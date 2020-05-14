@@ -13,9 +13,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import io.mosip.kernel.bioapi.impl.BioApiImpl;
-import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.bioapi.model.CompositeScore;
-import io.mosip.kernel.core.bioapi.model.Score;
+import io.mosip.kernel.core.bioapi.model.MatchDecision;
+import io.mosip.kernel.core.bioapi.model.Response;
 import io.mosip.kernel.core.bioapi.spi.IBioApi;
 import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
 import io.mosip.kernel.core.cbeffutil.entity.BIR;
@@ -32,6 +31,7 @@ import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.biometric.FingerprintDetailsDTO;
 import io.mosip.registration.entity.UserBiometric;
+import io.mosip.registration.packetmananger.dto.BiometricsDto;
 import io.mosip.registration.service.security.impl.AuthenticationServiceImpl;
 
 /**
@@ -106,7 +106,7 @@ public class FingerprintValidatorImpl extends AuthenticationBaseValidator {
 	 * registration.dto.biometric.FingerprintDetailsDTO, java.util.List)
 	 */
 	private boolean validateFpWithBioApi(List<FingerprintDetailsDTO> capturedFingerPrintDto,
-			List<UserBiometric> userFingerprintDetails) {
+			List<UserBiometric> userFingerprintDetails) {/*
 		boolean flag = true;
 
 		BIR[] capturedBir = new BIR[capturedFingerPrintDto.size()];
@@ -155,9 +155,9 @@ public class FingerprintValidatorImpl extends AuthenticationBaseValidator {
 			ApplicationContext.map().put("IDENTY_SDK", "FAILED");
 			return false;
 		}
-		
+		*/
 
-		return flag;
+		return false;
 
 	}
 
@@ -180,5 +180,41 @@ public class FingerprintValidatorImpl extends AuthenticationBaseValidator {
 	@Override
 	public AuthTokenDTO validate(String userId, String otp, boolean haveToSaveAuthToken) {
 		return null;
+	}
+
+	@Override
+	public boolean bioMerticsValidator(List<BiometricsDto> listOfBiometrics) {
+		List<UserBiometric> userDetailsRecorded = userDetailDAO
+				.getUserSpecificBioDetails(SessionContext.userContext().getUserId(), RegistrationConstants.FIN);
+		boolean flag = false;
+		for (BiometricsDto biometricDTO : listOfBiometrics) {
+			BIR capturedBir = new BIRBuilder().withBdb(biometricDTO.getAttributeISO())
+					.withBdbInfo(
+							new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FINGER)).build())
+					.build();
+
+			BIR[] registeredBir = new BIR[userDetailsRecorded.size()];
+			ApplicationContext.map().remove("IDENTY_SDK");
+			int i = 0;
+			for (UserBiometric userBiometric : userDetailsRecorded) {
+				registeredBir[i] = new BIRBuilder().withBdb(userBiometric.getBioIsoImage()).withBdbInfo(
+						new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FINGER)).build())
+						.build();
+				i++;
+			}
+			try {
+				Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
+				System.out.println(scores);
+
+			} catch (Exception exception) {
+				LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+						String.format("Exception while validating the iris with bio api: %s caused by %s",
+								exception.getMessage(), exception.getCause()));
+				ApplicationContext.map().put("IDENTY_SDK", "FAILED");
+				return false;
+
+			}
+		}
+		return flag;
 	}
 }

@@ -14,9 +14,11 @@ import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.HMACUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
+import io.mosip.registration.dao.UserDetailDAO;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.packetmananger.dto.BiometricsDto;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.validator.AuthenticationBaseValidator;
@@ -42,6 +44,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	private OTPValidatorImpl otpValidatorImpl;
 
 	private List<AuthenticationBaseValidator> authenticationBaseValidators;
+	
+	@Autowired
+	private UserDetailDAO userDetailDAO;
 
 	/* (non-Javadoc)
 	 * @see io.mosip.registration.service.security.AuthenticationServiceImpl#authValidator(java.lang.String, io.mosip.registration.dto.AuthenticationValidatorDTO)
@@ -103,6 +108,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			return RegistrationConstants.PWD_MISMATCH;
 		}
+	}
+
+	@Override
+	public Boolean validateBiometrics(String validatorType, List<BiometricsDto> listOfBiometrics) {
+
+		for (AuthenticationBaseValidator validator : authenticationBaseValidators) {
+			if (validator.getClass().getName().toLowerCase().contains(validatorType.toLowerCase())) {
+				return validator.bioMerticsValidator(listOfBiometrics);
+			}
+		}
+
+		return false;
+
 	}
 
 }

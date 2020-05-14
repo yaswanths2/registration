@@ -44,7 +44,7 @@
 	"description": "Full Name",
 	"label": {
 		"primary": "Full Name",
-		"secondary": "الاسم الكامل"
+		"secondary": "Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -66,7 +66,7 @@
 	"description": "dateOfBirth",
 	"label": {
 		"primary": "DOB",
-		"secondary": "دوب"
+		"secondary": "Ø¯ÙˆØ¨"
 	},
 	"controlType": "ageDate",
 	"fieldType": "default",
@@ -88,7 +88,7 @@
 	"description": "gender",
 	"label": {
 		"primary": "Gender",
-		"secondary": "جنس"
+		"secondary": "Ø¬Ù†Ø³"
 	},
 	"controlType": "dropdown",
 	"fieldType": "default",
@@ -106,7 +106,7 @@
 	"description": "addressLine1",
 	"label": {
 		"primary": "AddressLine1",
-		"secondary": "العنوان السطر 1"
+		"secondary": "Ø§Ù„Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø³Ø·Ø± 1"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -129,7 +129,7 @@
 	"description": "addressLine2",
 	"label": {
 		"primary": "AddressLine2",
-		"secondary": "سطر العنوان 2"
+		"secondary": "Ø³Ø·Ø± Ø§Ù„Ø¹Ù†ÙˆØ§Ù† 2"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -152,7 +152,7 @@
 	"description": "addressLine3",
 	"label": {
 		"primary": "AddressLine3",
-		"secondary": "العنوانالخط 3"
+		"secondary": "Ø§Ù„Ø¹Ù†ÙˆØ§Ù†Ø§Ù„Ø®Ø· 3"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -175,7 +175,7 @@
 	"description": "residenceStatus",
 	"label": {
 		"primary": "Residence Status",
-		"secondary": "حالة الإقامة"
+		"secondary": "Ø­Ø§Ù„Ø© Ø§Ù„Ø¥Ù‚Ø§Ù…Ø©"
 	},
 	"controlType": "dropdown",
 	"fieldType": "default",
@@ -193,7 +193,7 @@
 	"description": "region",
 	"label": {
 		"primary": "Region",
-		"secondary": "منطقة"
+		"secondary": "Ù…Ù†Ø·Ù‚Ø©"
 	},
 	"controlType": "dropdown",
 	"fieldType": "default",
@@ -216,7 +216,7 @@
 	"description": "province",
 	"label": {
 		"primary": "Province",
-		"secondary": "المحافظة"
+		"secondary": "Ø§Ù„Ù…Ø­Ø§Ù�Ø¸Ø©"
 	},
 	"controlType": "dropdown",
 	"fieldType": "default",
@@ -239,7 +239,7 @@
 	"description": "city",
 	"label": {
 		"primary": "City",
-		"secondary": "مدينة"
+		"secondary": "Ù…Ø¯ÙŠÙ†Ø©"
 	},
 	"controlType": "dropdown",
 	"fieldType": "default",
@@ -262,7 +262,7 @@
 	"description": "postalCode",
 	"label": {
 		"primary": "Postal Code",
-		"secondary": "الكود البريدى"
+		"secondary": "Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„Ø¨Ø±ÙŠØ¯Ù‰"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -285,7 +285,7 @@
 	"description": "phone",
 	"label": {
 		"primary": "Phone",
-		"secondary": "هاتف"
+		"secondary": "Ù‡Ø§ØªÙ�"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -308,7 +308,7 @@
 	"description": "email",
 	"label": {
 		"primary": "Email",
-		"secondary": "البريد الإلكتروني"
+		"secondary": "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -331,7 +331,7 @@
 	"description": "zone",
 	"label": {
 		"primary": "Zone",
-		"secondary": "منطقة"
+		"secondary": "Ù…Ù†Ø·Ù‚Ø©"
 	},
 	"controlType": "dropdown",
 	"fieldType": "default",
@@ -349,7 +349,7 @@
 	"description": "parentOrGuardianName",
 	"label": {
 		"primary": "Parent Name",
-		"secondary": "اسم الوالدين"
+		"secondary": "Ø§Ø³Ù… Ø§Ù„ÙˆØ§Ù„Ø¯ÙŠÙ†"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -368,7 +368,7 @@
 	"description": "parentOrGuardianRID",
 	"label": {
 		"primary": "Parent RID",
-		"secondary": "الوالد RID"
+		"secondary": "Ø§Ù„ÙˆØ§Ù„Ø¯ RID"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -387,7 +387,7 @@
 	"description": "parentOrGuardianUIN",
 	"label": {
 		"primary": "Parent UIN",
-		"secondary": "الأصل UIN"
+		"secondary": "Ø§Ù„Ø£ØµÙ„ UIN"
 	},
 	"controlType": "textbox",
 	"fieldType": "default",
@@ -405,7 +405,7 @@
 	"description": "proofOfAddress",
 	"label": {
 		"primary": "Address Proof",
-		"secondary": "إثبات العنوان"
+		"secondary": "Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¹Ù†ÙˆØ§Ù†"
 	},
 	"controlType": "fileupload",
 	"fieldType": "default",
@@ -423,7 +423,7 @@
 	"description": "proofOfIdentity",
 	"label": {
 		"primary": "Identity Proof",
-		"secondary": "إثبات الهوية"
+		"secondary": "Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ù‡ÙˆÙŠØ©"
 	},
 	"controlType": "fileupload",
 	"fieldType": "default",
@@ -441,7 +441,7 @@
 	"description": "proofOfRelationship",
 	"label": {
 		"primary": "Relationship Proof",
-		"secondary": "إثبات العلاقة"
+		"secondary": "Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¹Ù„Ø§Ù‚Ø©"
 	},
 	"controlType": "fileupload",
 	"fieldType": "default",
@@ -459,7 +459,7 @@
 	"description": "proofOfDateOfBirth",
 	"label": {
 		"primary": "DOB Proof",
-		"secondary": "دليل DOB"
+		"secondary": "Ø¯Ù„ÙŠÙ„ DOB"
 	},
 	"controlType": "fileupload",
 	"fieldType": "default",
@@ -477,7 +477,7 @@
 	"description": "proofOfException",
 	"label": {
 		"primary": "Exception Proof",
-		"secondary": "إثبات الاستثناء"
+		"secondary": "Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø§Ø³ØªØ«Ù†Ø§Ø¡"
 	},
 	"controlType": "fileupload",
 	"fieldType": "default",
@@ -495,7 +495,7 @@
 	"description": "proofOfException",
 	"label": {
 		"primary": "Exception Proof",
-		"secondary": "إثبات الاستثناء 2"
+		"secondary": "Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø§Ø³ØªØ«Ù†Ø§Ø¡ 2"
 	},
 	"controlType": "fileupload",
 	"fieldType": "default",
@@ -513,7 +513,7 @@
 	"description": "",
 	"label": {
 		"primary": "Exception Proof",
-		"secondary": "القياسات الحيوية الفردية"
+		"secondary": "Ø§Ù„Ù‚ÙŠØ§Ø³Ø§Øª Ø§Ù„Ø­ÙŠÙˆÙŠØ© Ø§Ù„Ù�Ø±Ø¯ÙŠØ©"
 	},
 	"controlType": "biometrics",
 	"fieldType": "default",
@@ -533,7 +533,7 @@
 	"description": "",
 	"label": {
 		"primary": "Individual Biometrics 2",
-		"secondary": "القياسات الحيوية الفردية 2"
+		"secondary": "Ø§Ù„Ù‚ÙŠØ§Ø³Ø§Øª Ø§Ù„Ø­ÙŠÙˆÙŠØ© Ø§Ù„Ù�Ø±Ø¯ÙŠØ© 2"
 	},
 	"controlType": "biometrics",
 	"fieldType": "default",
@@ -552,7 +552,7 @@
 	"description": "",
 	"label": {
 		"primary": "Parent Biometrics",
-		"secondary": "القياسات الحيوية للوالدين"
+		"secondary": "Ø§Ù„Ù‚ÙŠØ§Ø³Ø§Øª Ø§Ù„Ø­ÙŠÙˆÙŠØ© Ù„Ù„ÙˆØ§Ù„Ø¯ÙŠÙ†"
 	},
 	"controlType": "biometrics",
 	"fieldType": "default",
@@ -560,7 +560,7 @@
 	"validators": [],
 	"fieldCategory": "evidence",
 	"required": false,
-	"bioAttributes": ["face"],
+	"bioAttributes": ["leftEye","rightIndex","rightLittle","leftIndex","leftLittle","face"],
 	"subType": "introducer"
 }],
     "schemaJson": "{\"$schema\":\"http:\\/\\/json-schema.org\\/draft-07\\/schema#\",\"description\":\"test mosip id schema\",\"additionalProperties\":false,\"title\":\"mosip id schema\",\"type\":\"object\",\"definitions\":{\"simpleType\":{\"uniqueItems\":true,\"additionalItems\":false,\"type\":\"array\",\"items\":{\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"language\",\"value\"],\"properties\":{\"language\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}}},\"documentType\":{\"additionalProperties\":false,\"type\":\"object\",\"properties\":{\"format\":{\"type\":\"string\"},\"type\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}},\"biometricsType\":{\"additionalProperties\":false,\"type\":\"object\",\"properties\":{\"format\":{\"type\":\"string\"},\"version\":{\"type\":\"number\",\"minimum\":0},\"value\":{\"type\":\"string\"}}}},\"properties\":{\"identity\":{\"additionalProperties\":false,\"type\":\"object\",\"required\":[\"IDSchemaVersion\",\"UIN\",\"fullName\",\"dateOfBirth\",\"gender\",\"addressLine1\",\"addressLine2\",\"addressLine3\",\"region\",\"province\",\"city\",\"postalCode\",\"phone\",\"email\",\"zone\",\"proofOfIdentity\",\"proofOfRelationship\",\"proofOfDateOfBirth\",\"proofOfException\",\"proofOfException\",\"individualBiometrics\"],\"properties\":{\"proofOfAddress\":{\"fieldCategory\":\"optional\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/documentType\"},\"gender\":{\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"city\":{\"validators\":[{\"validator\":\"^(?=.{0,50}$).*\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"postalCode\":{\"validators\":[{\"validator\":\"^[(?i)A-Z0-9]{5}$|^NA$\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"type\":\"string\",\"fieldType\":\"default\"},\"individualBiometrics\":{\"bioAttributes\":\"[leftIris, face]\",\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/biometricsType\"},\"province\":{\"validators\":[{\"validator\":\"^(?=.{0,50}$).*\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"zone\":{\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"proofOfDateOfBirth\":{\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/documentType\"},\"addressLine1\":{\"validators\":[{\"validator\":\"^(?=.{0,50}$).*\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"addressLine2\":{\"validators\":[{\"validator\":\"^(?=.{0,50}$).*\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"residenceStatus\":{\"fieldCategory\":\"optional\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"addressLine3\":{\"validators\":[{\"validator\":\"^(?=.{0,50}$).*\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"email\":{\"validators\":[{\"validator\":\"^[a-zA-Z-\\\\+]+(\\\\.[a-zA-Z]+)*@[a-zA-Z-]+(\\\\.[a-zA-Z]+)*(\\\\.[a-zA-Z]{2,})$\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"type\":\"string\",\"fieldType\":\"default\"},\"parentOrGuardianRID\":{\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"parentOrGuardianBiometrics\":{\"bioAttributes\":\"[face]\",\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/biometricsType\"},\"fullName\":{\"validators\":[{\"validator\":\"^(?=.{0,50}$).*\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"dateOfBirth\":{\"validators\":[{\"validator\":\"^(1869|18[7-9][0-9]|19[0-9][0-9]|20[0-9][0-9])\\/([0][1-9]|1[0-2])\\/([0][1-9]|[1-2][0-9]|3[01])$\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"type\":\"string\",\"fieldType\":\"default\"},\"parentOrGuardianUIN\":{\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"proofOfIdentity\":{\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/documentType\"},\"IDSchemaVersion\":{\"fieldCategory\":\"pvt\",\"format\":\"none\",\"type\":\"number\",\"fieldType\":\"default\",\"minimum\":0},\"proofOfException\":{\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/documentType\"},\"phone\":{\"validators\":[{\"validator\":\"^([6-9]{1})([0-9]{9})$\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"type\":\"string\",\"fieldType\":\"default\"},\"parentOrGuardianName\":{\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"},\"proofOfRelationship\":{\"fieldCategory\":\"evidence\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/documentType\"},\"UIN\":{\"fieldCategory\":\"pvt\",\"format\":\"none\",\"type\":\"integer\",\"fieldType\":\"default\",\"minimum\":0},\"region\":{\"validators\":[{\"validator\":\"^(?=.{0,50}$).*\",\"arguments\":[],\"type\":\"regex\"}],\"fieldCategory\":\"pvt\",\"format\":\"none\",\"fieldType\":\"default\",\"$ref\":\"#\\/definitions\\/simpleType\"}}}}}",

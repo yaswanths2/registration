@@ -116,8 +116,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-core</artifactId>
-			<version>${mosip.core.kernel.version}</version>
-		</dependency>
+			</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idgenerator-rid</artifactId>
@@ -368,7 +367,7 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-bioapi-provider </artifactId>
-			<version>${mosip.core.kernel.version}</version>
+			<version>1.0.8</version>
 		</dependency>
 
 		<dependency>

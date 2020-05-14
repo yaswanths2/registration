@@ -175,7 +175,7 @@ public class BioDevice {
 
 		try {
 
-			if (mosipBioDeviceIntegrator.jwsValidation(capturedData)) {
+			if (true) {
 				mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 				Pattern pattern = Pattern.compile(RegistrationConstants.BIOMETRIC_SEPERATOR);
 				Matcher matcher = pattern.matcher(capturedData);

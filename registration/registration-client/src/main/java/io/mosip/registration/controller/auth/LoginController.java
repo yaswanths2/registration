@@ -280,7 +280,7 @@ public class LoginController extends BaseController implements Initializable {
 			// Execute SQL file (Script files on update)
 			executeSQLFile();
 
-			if (hasUpdate) {
+			/*if (hasUpdate) {
 
 				// Update Application
 				headerController.softwareUpdate(loginRoot, progressIndicator, RegistrationUIConstants.UPDATE_LATER,
@@ -295,7 +295,7 @@ public class LoginController extends BaseController implements Initializable {
 					return;
 				}
 				jobConfigurationService.startScheduler();
-			}
+			}*/
 
 		} catch (IOException ioException) {
 

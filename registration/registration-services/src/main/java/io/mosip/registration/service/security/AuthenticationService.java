@@ -4,12 +4,13 @@ import java.util.List;
 
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
+import io.mosip.registration.packetmananger.dto.BiometricsDto;
 import io.mosip.registration.validator.AuthenticationBaseValidator;
 
 public interface AuthenticationService {
 
 	/**
-	 * Common Validator for all the Authentications
+	 * Common Validator for all the Authentications same method is reused in deduplication check
 	 * 
 	 * @param validatorType
 	 *            The type of validator
@@ -51,5 +52,16 @@ public interface AuthenticationService {
 	 * @return String
 	 */
 	String validatePassword(AuthenticationValidatorDTO authenticationValidatorDTO);
+	
+	/**
+	 * Common Validator for all the Authentications same method is reused in deduplication check
+	 * 
+	 * @param validatorType
+	 *            The type of validator
+	 * @param authenticationValidatorDTO
+	 *            The authentication validation inputs
+	 * @return Boolean returning whether it is matched or not
+	 */
+	Boolean validateBiometrics(String validatorType,List<BiometricsDto> listOfBiometrics);
 
 }
