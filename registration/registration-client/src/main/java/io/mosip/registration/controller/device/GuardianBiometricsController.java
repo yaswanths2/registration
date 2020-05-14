@@ -1922,5 +1922,4 @@ public class GuardianBiometricsController extends BaseController implements Init
 		}
 		return isCaptured;
 	}
-
 }

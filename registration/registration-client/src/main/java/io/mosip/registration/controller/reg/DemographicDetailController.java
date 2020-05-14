@@ -838,7 +838,6 @@ public class DemographicDetailController extends BaseController {
 					registrationDTO.addDemographicField(schemaField.getId(), 
 							applicationContext.getApplicationLanguage(), platformField.getValue().getName(),
 							applicationContext.getLocalLanguage(), localField == null ? null : localField.getValue()!=null?localField.getValue().getName():null);
-
 				}
 				else {
 					TextField platformField = listOfTextField.get(schemaField.getId());
