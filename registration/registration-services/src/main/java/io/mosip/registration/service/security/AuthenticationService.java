@@ -5,6 +5,7 @@ import java.util.List;
 import io.mosip.kernel.packetmanager.dto.BiometricsDto;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.validator.AuthenticationBaseValidator;
 
 public interface AuthenticationService {
@@ -60,6 +61,7 @@ public interface AuthenticationService {
 	 * @param authenticationValidatorDTO
 	 *            The authentication validation inputs
 	 * @return Boolean returning whether it is matched or not
+	 * @throws RegBaseCheckedException 
 	 */
 	Boolean validateBiometrics(String validatorType,List<BiometricsDto> listOfBiometrics);
 }

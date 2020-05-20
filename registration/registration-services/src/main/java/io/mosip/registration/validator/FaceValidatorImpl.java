@@ -6,6 +6,8 @@ import static io.mosip.registration.constants.LoggerConstants.LOG_REG_FINGERPRIN
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Service;
 
 import io.mosip.kernel.bioapi.impl.BioApiImpl;
 import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.bioapi.model.Score;
+import io.mosip.kernel.core.bioapi.model.MatchDecision;
+import io.mosip.kernel.core.bioapi.model.Response;
 import io.mosip.kernel.core.bioapi.spi.IBioApi;
 import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
 import io.mosip.kernel.core.cbeffutil.entity.BIR;
@@ -136,43 +139,47 @@ public class FaceValidatorImpl extends AuthenticationBaseValidator {
 		LOGGER.info(LOG_REG_FACE_FACADE, APPLICATION_NAME, APPLICATION_ID,
 
 				"Stubbing face details for user registration");
-		
-		BIR capturedBir = new BIRBuilder().withBdb(faceDetail.getFaceISO()).withBdbInfo(new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FACE)).build()).build();
+		boolean flag = false;
+		BIR capturedBir = new BIRBuilder().withBdb(faceDetail.getFaceISO())
+				.withBdbInfo(new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FACE)).build())
+				.build();
 		BIR[] registeredBir = new BIR[userFaceDetails.size()];
 		ApplicationContext.map().remove("IDENTY_SDK");
-		Score[] scores = null;
-		boolean flag = false;
 		int i = 0;
 		for (UserBiometric userBiometric : userFaceDetails) {
-			registeredBir[i] = new BIRBuilder().withBdb(userBiometric.getBioIsoImage()).withBdbInfo(new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FACE)).build()).build();
+			registeredBir[i] = new BIRBuilder().withBdb(userBiometric.getBioIsoImage())
+					.withBdbInfo(
+							new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FACE)).build())
+					.build();
 			i++;
 		}
 		try {
-			scores = ibioApi.match(capturedBir, registeredBir, null);
-			int reqScore = 80;
-			for (Score score : scores) {
-				if (score.getScaleScore() >= reqScore) {
-					flag = true;
-				}
+			Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
+			MatchDecision[] match = null;
+			List<MatchDecision> bioMatchList = null;
+			if (scores.getStatusCode() == 200) {
+				match = scores.getResponse();
+				bioMatchList = new ArrayList<>(Arrays.asList(match));
+				flag = !bioMatchList.isEmpty() ? bioMatchList.stream().anyMatch(MatchDecision::isMatch) : false;
+				LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID, "Bio validator completed...");
+			} else {
+				LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+						"Bio validator with error code other than 200");
+				LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+						String.valueOf(scores.getStatusCode() + "========>" + scores.getStatusMessage()));
+				return false;
 			}
-		} catch (BiometricException exception) {
-			LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID, String.format(
-					"Exception while validating the face with bio api: %s caused by %s",
-					exception.getMessage(), exception.getCause()));
-			ApplicationContext.map().put("IDENTY_SDK", "FAILED");
-			return false;
-
-		}catch (RuntimeException exception) {
-			LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID, String.format(
-					"Exception while validating the face with bio api: %s caused by %s Runtime",
-					exception.getMessage(), exception.getCause()));
+		} catch (RuntimeException exception) {
+			LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+					String.format("Exception while validating the face with bio api: %s caused by %s Runtime",
+							exception.getMessage(), exception.getCause()));
 			ApplicationContext.map().put("IDENTY_SDK", "FAILED");
 			return false;
 
 		}
-		
+
 		return flag;
-		
+
 	}
 
 	@Override
@@ -196,15 +203,29 @@ public class FaceValidatorImpl extends AuthenticationBaseValidator {
 				i++;
 			}
 			try {
-				/*Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
-				System.out.println(scores);*/
+				Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
+				MatchDecision[] match = null;
+				List<MatchDecision> bioMatchList = null;
+				if (scores.getStatusCode() == 200) {
+					match = scores.getResponse();
+					bioMatchList = new ArrayList<>(Arrays.asList(match));
+					flag = !bioMatchList.isEmpty() ? bioMatchList.stream().anyMatch(MatchDecision::isMatch) : false;
+					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							"Bio validator completed...");
+				} else {
+					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							"Bio validator with error code other than 200");
+					LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							String.valueOf(scores.getStatusCode() + "========>" + scores.getStatusMessage()));
+					return true;
+				}
 
 			} catch (Exception exception) {
 				LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
 						String.format("Exception while validating the face with bio api: %s caused by %s",
 								exception.getMessage(), exception.getCause()));
 				ApplicationContext.map().put("IDENTY_SDK", "FAILED");
-				return false;
+				return true;
 
 			}
 		}

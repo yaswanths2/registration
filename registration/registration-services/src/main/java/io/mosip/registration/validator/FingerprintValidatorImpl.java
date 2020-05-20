@@ -5,6 +5,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -13,9 +14,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import io.mosip.kernel.bioapi.impl.BioApiImpl;
-import io.mosip.kernel.core.bioapi.exception.BiometricException;
-import io.mosip.kernel.core.bioapi.model.CompositeScore;
-import io.mosip.kernel.core.bioapi.model.Score;
+import io.mosip.kernel.core.bioapi.model.MatchDecision;
+import io.mosip.kernel.core.bioapi.model.Response;
 import io.mosip.kernel.core.bioapi.spi.IBioApi;
 import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
 import io.mosip.kernel.core.cbeffutil.entity.BIR;
@@ -108,58 +108,53 @@ public class FingerprintValidatorImpl extends AuthenticationBaseValidator {
 	 */
 	private boolean validateFpWithBioApi(List<FingerprintDetailsDTO> capturedFingerPrintDto,
 			List<UserBiometric> userFingerprintDetails) {
-		boolean flag = true;
+		boolean flag = false;
 
-		BIR[] capturedBir = new BIR[capturedFingerPrintDto.size()];
-
-		int i = 0;
-		for (FingerprintDetailsDTO userBiometric : capturedFingerPrintDto) {
-			capturedBir[i] = new BIRBuilder().withBdb(userBiometric.getFingerPrintISOImage())
+		for (FingerprintDetailsDTO biometricDTO : capturedFingerPrintDto) {
+			BIR capturedBir = new BIRBuilder().withBdb(biometricDTO.getFingerPrintISOImage())
 					.withBdbInfo(
 							new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FINGER)).build())
 					.build();
-			i++;
-		}
 
-		BIR[] registeredBir = new BIR[userFingerprintDetails.size()];
-		Score[] scores = null;
-		flag = false;
-		i = 0;
-		ApplicationContext.map().remove("IDENTY_SDK");
-		for (UserBiometric userBiometric : userFingerprintDetails) {
-			registeredBir[i] = new BIRBuilder().withBdb(userBiometric.getBioIsoImage())
-					.withBdbInfo(
-							new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FINGER)).build())
-					.build();
-			i++;
-		}
-		try {
-			CompositeScore compositeScore = ibioApi.compositeMatch(capturedBir, registeredBir, null);
-			scores = compositeScore.getIndividualScores();
-			int reqScore = 80;
-			for (Score score : scores) {
-				if (score.getScaleScore() >= reqScore) {
-					flag = true;
-					break;
-				}
+			BIR[] registeredBir = new BIR[userFingerprintDetails.size()];
+			ApplicationContext.map().remove("IDENTY_SDK");
+			int i = 0;
+			for (UserBiometric userBiometric : userFingerprintDetails) {
+				registeredBir[i] = new BIRBuilder().withBdb(userBiometric.getBioIsoImage()).withBdbInfo(
+						new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FINGER)).build())
+						.build();
+				i++;
 			}
-		} catch (BiometricException exception) {
-			LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
-					String.format("Exception while validating the finger print with bio api: %s caused by %s",
-							exception.getMessage(), exception.getCause()));
-			ApplicationContext.map().put("IDENTY_SDK", "FAILED");
-			return false;
-		} catch (RuntimeException exception) {
-			LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
-					String.format("Exception while validating the finger print with bio api: %s caused by %s Runtime",
-							exception.getMessage(), exception.getCause()));
-			ApplicationContext.map().put("IDENTY_SDK", "FAILED");
-			return false;
+			try {
+				Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
+				MatchDecision[] match = null;
+				List<MatchDecision> bioMatchList = null;
+
+				if (scores.getStatusCode() == 200) {
+					match = scores.getResponse();
+					bioMatchList = new ArrayList<>(Arrays.asList(match));
+					flag = !bioMatchList.isEmpty() ? bioMatchList.stream().anyMatch(MatchDecision::isMatch) : false;
+					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							"Bio validator completed...");
+				} else {
+					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							"Bio validator with error code other than 200");
+					LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							String.valueOf(scores.getStatusCode() + "========>" + scores.getStatusMessage()));
+					return false;
+				}
+
+			} catch (Exception exception) {
+				LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+						String.format("Exception while validating the iris with bio api: %s caused by %s",
+								exception.getMessage(), exception.getCause()));
+				ApplicationContext.map().put("IDENTY_SDK", "FAILED");
+				return false;
+
+			}
+
 		}
-		
-
 		return flag;
-
 	}
 
 	/**
@@ -186,6 +181,7 @@ public class FingerprintValidatorImpl extends AuthenticationBaseValidator {
 	@Override
 	public boolean bioMerticsValidator(List<BiometricsDto> listOfBiometrics) {
 
+		LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID, "Entering into bio validator");
 		List<UserBiometric> userDetailsRecorded = userDetailDAO
 				.getUserSpecificBioDetails(SessionContext.userContext().getUserId(), RegistrationConstants.FIN);
 		boolean flag = false;
@@ -205,18 +201,35 @@ public class FingerprintValidatorImpl extends AuthenticationBaseValidator {
 				i++;
 			}
 			try {
-				/*Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
-				System.out.println(scores);*/
+				Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
+				MatchDecision[] match = null;
+				List<MatchDecision> bioMatchList = null;
+
+				if (scores.getStatusCode() == 200) {
+					match = scores.getResponse();
+					bioMatchList = new ArrayList<>(Arrays.asList(match));
+					flag = !bioMatchList.isEmpty() ? bioMatchList.stream().anyMatch(MatchDecision::isMatch) : false;
+					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							"Bio validator completed...");
+				} else {
+					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							"Bio validator with error code other than 200");
+					LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+							String.valueOf(scores.getStatusCode() + "========>" + scores.getStatusMessage()));
+					return true;
+				}
 
 			} catch (Exception exception) {
 				LOGGER.error(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
 						String.format("Exception while validating the iris with bio api: %s caused by %s",
 								exception.getMessage(), exception.getCause()));
 				ApplicationContext.map().put("IDENTY_SDK", "FAILED");
-				return false;
+				return true;
 
 			}
 		}
+		LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
+				"leaving into bio validator with out exception");
 		return flag;
 
 	}
