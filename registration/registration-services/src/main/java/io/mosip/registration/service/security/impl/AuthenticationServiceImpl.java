@@ -18,6 +18,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
 import io.mosip.registration.dto.UserDTO;
+import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.security.AuthenticationService;
 import io.mosip.registration.validator.AuthenticationBaseValidator;
@@ -107,7 +108,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
-	public Boolean validateBiometrics(String validatorType, List<BiometricsDto> listOfBiometrics) {
+	public Boolean validateBiometrics(String validatorType, List<BiometricsDto> listOfBiometrics){
 		for (AuthenticationBaseValidator validator : authenticationBaseValidators) {
 			if (validator.getClass().getName().toLowerCase().contains(validatorType.toLowerCase())) {
 				return validator.bioMerticsValidator(listOfBiometrics);
