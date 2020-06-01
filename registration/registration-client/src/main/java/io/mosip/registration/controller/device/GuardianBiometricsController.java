@@ -823,11 +823,15 @@ public class GuardianBiometricsController extends BaseController implements Init
 
 			// TODO validate local de-dup check
 			boolean isMatchedWithLocalBiometrics = false;
+			
 
 			// TODO if threshold values and local-dedup passed save into the registration
 			// DTO
-			// isMatchedWithLocalBiometrics=authenticationService.validateBiometrics(getBioType(currentModality),
-			// biometricDTOList);
+			
+			isMatchedWithLocalBiometrics = bioService.isMdmEnabled() ? generateAlert(
+					RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.BIOMETRICS_CAPTURING, () -> {
+						return authenticationService.validateBiometrics(getBioType(currentModality), biometricDTOList);
+					}, scanPopUpViewController) : false;
 
 			if (isValidBiometric && !isMatchedWithLocalBiometrics) {
 

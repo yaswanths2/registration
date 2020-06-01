@@ -364,6 +364,12 @@
 			<artifactId>kernel-bioapi-provider </artifactId>
 			<version>1.0.8</version>
 		</dependency>
+		
+		<dependency>
+				<groupId>io.mosip.kernel</groupId>
+				<artifactId>kernel-biometrics-api</artifactId>
+				<version>0.9-SNAPSHOT</version>
+		</dependency>
 
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>

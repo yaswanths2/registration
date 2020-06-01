@@ -7,6 +7,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,13 +15,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import io.mosip.kernel.bioapi.impl.BioApiImpl;
-import io.mosip.kernel.core.bioapi.model.MatchDecision;
-import io.mosip.kernel.core.bioapi.model.Response;
-import io.mosip.kernel.core.bioapi.spi.IBioApi;
-import io.mosip.kernel.core.cbeffutil.entity.BDBInfo;
-import io.mosip.kernel.core.cbeffutil.entity.BIR;
-import io.mosip.kernel.core.cbeffutil.entity.BIR.BIRBuilder;
-import io.mosip.kernel.core.cbeffutil.jaxbclasses.SingleType;
+import io.mosip.kernel.biometrics.constant.BiometricType;
+import io.mosip.kernel.biometrics.entities.BDBInfo;
+import io.mosip.kernel.biometrics.entities.BDBInfo.BDBInfoBuilder;
+import io.mosip.kernel.biometrics.entities.BIR;
+import io.mosip.kernel.biometrics.entities.BIR.BIRBuilder;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
+import io.mosip.kernel.biometrics.model.MatchDecision;
+import io.mosip.kernel.biometrics.model.Response;
+import io.mosip.kernel.biometrics.spi.IBioApi;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.packetmanager.dto.BiometricsDto;
 import io.mosip.registration.config.AppConfig;
@@ -182,35 +185,53 @@ public class FingerprintValidatorImpl extends AuthenticationBaseValidator {
 	public boolean bioMerticsValidator(List<BiometricsDto> listOfBiometrics) {
 
 		LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID, "Entering into bio validator");
+		List<BIR> bioRecordSampleList=new ArrayList<>();
+		List<BIR> bioRecordGalleryList=new ArrayList<>();
+		BiometricRecord bioRecordSample=new BiometricRecord();
 		List<UserBiometric> userDetailsRecorded = userDetailDAO
 				.getUserSpecificBioDetails(SessionContext.userContext().getUserId(), RegistrationConstants.FIN);
 		boolean flag = false;
 		for (BiometricsDto biometricDTO : listOfBiometrics) {
-			BIR capturedBir = new BIRBuilder().withBdb(biometricDTO.getAttributeISO())
-					.withBdbInfo(
-							new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FINGER)).build())
+			
+			BIR birBuildSample = new BIRBuilder().withBdb(biometricDTO.getAttributeISO()).withBdbInfo(
+					new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(BiometricType.FINGER)).build())
 					.build();
-
-			BIR[] registeredBir = new BIR[userDetailsRecorded.size()];
+			bioRecordSampleList.add(birBuildSample);
+		}
+			
+		bioRecordSample.setSegments(bioRecordSampleList);
+			
+		BiometricRecord[] bioRecordGallery=new BiometricRecord[userDetailsRecorded.size()];
+		
+			BIR[] birBuildGallery = new BIR[userDetailsRecorded.size()];
 			ApplicationContext.map().remove("IDENTY_SDK");
 			int i = 0;
 			for (UserBiometric userBiometric : userDetailsRecorded) {
-				registeredBir[i] = new BIRBuilder().withBdb(userBiometric.getBioIsoImage()).withBdbInfo(
-						new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(SingleType.FINGER)).build())
+				birBuildGallery[i] = new BIRBuilder().withBdb(userBiometric.getBioIsoImage()).withBdbInfo(
+						new BDBInfo.BDBInfoBuilder().withType(Collections.singletonList(BiometricType.FINGER)).build())
 						.build();
+				
+				bioRecordGalleryList.add(birBuildGallery[i]);
+				bioRecordGallery[i].setSegments(bioRecordGalleryList);
+				
 				i++;
+				
+				
 			}
+			
+			
 			try {
-				Response<MatchDecision[]> scores = ibioApi.match(capturedBir, registeredBir, null);
+				Response<MatchDecision[] > scores = ibioApi.match(bioRecordSample, bioRecordGallery,Collections.singletonList(BiometricType.FINGER), null);
 				MatchDecision[] match = null;
 				List<MatchDecision> bioMatchList = null;
 
 				if (scores.getStatusCode() == 200) {
 					match = scores.getResponse();
 					bioMatchList = new ArrayList<>(Arrays.asList(match));
-					flag = !bioMatchList.isEmpty() ? bioMatchList.stream().anyMatch(MatchDecision::isMatch) : false;
+					bioMatchList.get(0).getDecisions();
+					/*flag = !bioMatchList.isEmpty() ? bioMatchList.stream().anyMatch(MatchDecision::isMatch) : false;
 					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
-							"Bio validator completed...");
+							"Bio validator completed...");*/
 				} else {
 					LOGGER.info(LOG_REG_FINGERPRINT_FACADE, APPLICATION_NAME, APPLICATION_ID,
 							"Bio validator with error code other than 200");
