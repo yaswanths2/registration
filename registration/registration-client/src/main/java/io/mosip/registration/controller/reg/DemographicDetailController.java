@@ -154,7 +154,10 @@ public class DemographicDetailController extends BaseController {
 	private ResourceBundle localLabelBundle;
 	private String primaryLanguage;
 	private String secondaryLanguage;
-	private List<String> orderOfAddress;
+	private List<String> presentAddress;
+	private List<String> permanentAddress;
+	private List<String> pobAddress;
+
 	boolean hasToBeTransliterated = true;
 	// public Map<String, ComboBox<String>> listOfComboBoxWithString;
 	public Map<String, ComboBox<GenericDto>> listOfComboBoxWithObject;
@@ -239,26 +242,63 @@ public class DemographicDetailController extends BaseController {
 				}
 			}
 
-			addFirstOrderAddress(listOfComboBoxWithObject.get(orderOfAddress.get(0)), 1,
+			addFirstOrderAddress(listOfComboBoxWithObject.get(presentAddress.get(0)), 1,
+					applicationContext.getApplicationLanguage());
+			addFirstOrderAddress(listOfComboBoxWithObject.get(permanentAddress.get(0)), 1,
+					applicationContext.getApplicationLanguage());
+			addFirstOrderAddress(listOfComboBoxWithObject.get(pobAddress.get(0)), 1,
 					applicationContext.getApplicationLanguage());
 
 			if (isLocalLanguageAvailable() || !isAppLangAndLocalLangSame()) {
 
 				addFirstOrderAddress(
-						listOfComboBoxWithObject.get(orderOfAddress.get(0) + RegistrationConstants.LOCAL_LANGUAGE), 1,
+						listOfComboBoxWithObject.get(presentAddress.get(0) + RegistrationConstants.LOCAL_LANGUAGE), 1,
+						applicationContext.getLocalLanguage());
+				addFirstOrderAddress(
+						listOfComboBoxWithObject.get(permanentAddress.get(0) + RegistrationConstants.LOCAL_LANGUAGE), 1,
+						applicationContext.getLocalLanguage());
+				addFirstOrderAddress(
+						listOfComboBoxWithObject.get(pobAddress.get(0) + RegistrationConstants.LOCAL_LANGUAGE), 1,
 						applicationContext.getLocalLanguage());
 			}
 
 			populateDropDowns();
-			for (int j = 0; j < orderOfAddress.size() - 1; j++) {
+			for (int j = 0; j < presentAddress.size() - 1; j++) {
 				final int k = j;
 
 				try {
-					listOfComboBoxWithObject.get(orderOfAddress.get(k)).setOnAction((event) -> {
-						configureMethodsForAddress(k, k + 1, orderOfAddress.size());
+					listOfComboBoxWithObject.get(presentAddress.get(k)).setOnAction((event) -> {
+						configureMethodsForAddress(k, k + 1, presentAddress.size());
 					});
 				} catch (Exception runtimeException) {
-					LOGGER.info(orderOfAddress.get(k) + " is not a valid field", APPLICATION_NAME,
+					LOGGER.info(presentAddress.get(k) + " is not a valid field", APPLICATION_NAME,
+							RegistrationConstants.APPLICATION_ID,
+							runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+				}
+			}
+
+			for (int j = 0; j < permanentAddress.size() - 1; j++) {
+				final int k = j;
+
+				try {
+					listOfComboBoxWithObject.get(permanentAddress.get(k)).setOnAction((event) -> {
+						configureMethodsForAddress(k, k + 1, permanentAddress.size());
+					});
+				} catch (Exception runtimeException) {
+					LOGGER.info(permanentAddress.get(k) + " is not a valid field", APPLICATION_NAME,
+							RegistrationConstants.APPLICATION_ID,
+							runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
+				}
+			}
+			for (int j = 0; j < pobAddress.size() - 1; j++) {
+				final int k = j;
+
+				try {
+					listOfComboBoxWithObject.get(pobAddress.get(k)).setOnAction((event) -> {
+						configureMethodsForAddress(k, k + 1, pobAddress.size());
+					});
+				} catch (Exception runtimeException) {
+					LOGGER.info(pobAddress.get(k) + " is not a valid field", APPLICATION_NAME,
 							RegistrationConstants.APPLICATION_ID,
 							runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
 				}
@@ -275,24 +315,59 @@ public class DemographicDetailController extends BaseController {
 
 	private void fillOrderOfLocation() {
 		List<Location> locations = masterSyncDao.getLocationDetails(applicationContext.getApplicationLanguage());
-		Map<Integer, String> treeMap = new TreeMap<Integer, String>();
+		Map<Integer, String> presentMap = new TreeMap<Integer, String>();
+		Map<Integer, String> permanentMap = new TreeMap<Integer, String>();
+		Map<Integer, String> pobMap = new TreeMap<Integer, String>();
 
 		Collection<UiSchemaDTO> fields = validation.getValidationMap().values();
 		for (Location location : locations) {
-			List<UiSchemaDTO> matchedfield = fields.stream()
+			List<UiSchemaDTO> presentAddress = fields.stream()
 					.filter(field -> isDemographicField(field) && field.getSubType() != null
 							&& RegistrationConstants.DROPDOWN.equals(field.getControlType())
-							&& field.getSubType().equalsIgnoreCase(location.getHierarchyName()))
+							&& field.getSubType().equalsIgnoreCase(location.getHierarchyName())
+							&& field.getId().contains("present"))
 					.collect(Collectors.toList());
 
-			if (matchedfield != null && !matchedfield.isEmpty()) {
-				treeMap.put(location.getHierarchyLevel(), matchedfield.get(0).getId());
+			List<UiSchemaDTO> permanentAddress = fields.stream()
+					.filter(field -> isDemographicField(field) && field.getSubType() != null
+							&& RegistrationConstants.DROPDOWN.equals(field.getControlType())
+							&& field.getSubType().equalsIgnoreCase(location.getHierarchyName())
+							&& field.getId().contains("permanent"))
+					.collect(Collectors.toList());
+
+			List<UiSchemaDTO> pobAddress = fields.stream()
+					.filter(field -> isDemographicField(field) && field.getSubType() != null
+							&& RegistrationConstants.DROPDOWN.equals(field.getControlType())
+							&& field.getSubType().equalsIgnoreCase(location.getHierarchyName())
+							&& field.getId().contains("pob"))
+					.collect(Collectors.toList());
+
+			if (presentAddress != null && !presentAddress.isEmpty()) {
+				presentMap.put(location.getHierarchyLevel(), presentAddress.get(0).getId());
 				LOGGER.info("REGISTRATION - CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"location.getHierarchyLevel() >>> " + location.getHierarchyLevel()
-								+ " matchedfield.get(0).getId() >>> " + matchedfield.get(0).getId());
+								+ " matchedfield.get(0).getId() >>> " + presentAddress.get(0).getId());
 			}
+			if (permanentAddress != null && !permanentAddress.isEmpty()) {
+				permanentMap.put(location.getHierarchyLevel(), permanentAddress.get(0).getId());
+				LOGGER.info("REGISTRATION - CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"location.getHierarchyLevel() >>> " + location.getHierarchyLevel()
+								+ " matchedfield.get(0).getId() >>> " + permanentAddress.get(0).getId());
+			}
+			if (pobAddress != null && !pobAddress.isEmpty()) {
+				pobMap.put(location.getHierarchyLevel(), pobAddress.get(0).getId());
+				LOGGER.info("REGISTRATION - CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"location.getHierarchyLevel() >>> " + location.getHierarchyLevel()
+								+ " matchedfield.get(0).getId() >>> " + pobAddress.get(0).getId());
+			}
+
 		}
-		orderOfAddress = treeMap.values().stream().collect(Collectors.toList());
+
+		presentAddress = presentMap.values().stream().collect(Collectors.toList());
+		permanentAddress = permanentMap.values().stream().collect(Collectors.toList());
+		pobAddress = pobMap.values().stream().collect(Collectors.toList());
+
+	
 	}
 
 	private void disablePreRegFetch() {
@@ -738,66 +813,78 @@ public class DemographicDetailController extends BaseController {
 	private void populateButtons(String key) {
 		try {
 			switch (key.toLowerCase()) {
-				case "gender":
-					List<GenericDto> genderAppLanguage = masterSyncService.getGenderDtls(ApplicationContext.applicationLanguage()).stream()
-							.filter(v -> !v.getCode().equals("OTH")).collect(Collectors.toList());
-					List<GenericDto> genderLocalLanguage = masterSyncService.getGenderDtls(ApplicationContext.localLanguage()).stream()
-							.filter(v -> !v.getCode().equals("OTH")).collect(Collectors.toList());
-					if(genderAppLanguage.size() == 2 && genderLocalLanguage.size() == 2) {
-						genderAppLanguage.forEach(genericDto -> {
-							genderLocalLanguage.forEach(genericDtoLocalLang -> {
-								if(genericDto.getCode().equals(genericDtoLocalLang.getCode())) {
-									Button button = new Button(genericDto.getName());
-									button.setId("gender" + genericDto.getCode());
-									List<Button> buttons = (listOfButtons.get("gender") == null) ? new ArrayList<>() : listOfButtons.get("gender");
-									buttons.add(button);
-									listOfButtons.put("gender", buttons);
-									Button buttonLocalLang = new Button(genericDtoLocalLang.getName());
-									buttonLocalLang.setId("gender" + genericDtoLocalLang.getCode() + RegistrationConstants.LOCAL_LANGUAGE);
-									List<Button> buttonsLocalLang = (listOfButtons.get("genderLocalLanguage") == null) ? new ArrayList<>() : listOfButtons.get("genderLocalLanguage");
-									buttonsLocalLang.add(buttonLocalLang);
-									listOfButtons.put("genderLocalLanguage", buttonsLocalLang);
-								}
-							});							
+			case "gender":
+				List<GenericDto> genderAppLanguage = masterSyncService
+						.getGenderDtls(ApplicationContext.applicationLanguage()).stream()
+						.filter(v -> !v.getCode().equals("OTH")).collect(Collectors.toList());
+				List<GenericDto> genderLocalLanguage = masterSyncService
+						.getGenderDtls(ApplicationContext.localLanguage()).stream()
+						.filter(v -> !v.getCode().equals("OTH")).collect(Collectors.toList());
+				if (genderAppLanguage.size() == 2 && genderLocalLanguage.size() == 2) {
+					genderAppLanguage.forEach(genericDto -> {
+						genderLocalLanguage.forEach(genericDtoLocalLang -> {
+							if (genericDto.getCode().equals(genericDtoLocalLang.getCode())) {
+								Button button = new Button(genericDto.getName());
+								button.setId("gender" + genericDto.getCode());
+								List<Button> buttons = (listOfButtons.get("gender") == null) ? new ArrayList<>()
+										: listOfButtons.get("gender");
+								buttons.add(button);
+								listOfButtons.put("gender", buttons);
+								Button buttonLocalLang = new Button(genericDtoLocalLang.getName());
+								buttonLocalLang.setId("gender" + genericDtoLocalLang.getCode()
+										+ RegistrationConstants.LOCAL_LANGUAGE);
+								List<Button> buttonsLocalLang = (listOfButtons.get("genderLocalLanguage") == null)
+										? new ArrayList<>()
+										: listOfButtons.get("genderLocalLanguage");
+								buttonsLocalLang.add(buttonLocalLang);
+								listOfButtons.put("genderLocalLanguage", buttonsLocalLang);
+							}
 						});
-					}			
-					break;
+					});
+				}
+				break;
 
-				case "residencestatus":
-					List<GenericDto> residenceAppLanguage = (masterSyncService.getIndividualType(ApplicationContext.applicationLanguage())).stream()
-							.collect(Collectors.toList());
-					List<GenericDto> residenceLocalLanguage = (masterSyncService.getIndividualType(ApplicationContext.localLanguage())).stream()
-							.collect(Collectors.toList());
-					if(residenceAppLanguage.size() == 2 && residenceLocalLanguage.size() == 2) {
-						residenceAppLanguage.forEach(genericDto -> {
-							residenceLocalLanguage.forEach(genericDtoLocalLang -> {
-								if(genericDto.getCode().equals(genericDtoLocalLang.getCode())) {
-									Button button = new Button(genericDto.getName());
-									button.setId("residenceStatus" + genericDto.getCode());
-									List<Button> buttons = (listOfButtons.get("residenceStatus") == null) ? new ArrayList<>() : listOfButtons.get("residenceStatus");
-									buttons.add(button);
-									listOfButtons.put("residenceStatus", buttons);
-									Button buttonLocalLang = new Button(genericDtoLocalLang.getName());
-									buttonLocalLang.setId("residenceStatus" + genericDtoLocalLang.getCode() + RegistrationConstants.LOCAL_LANGUAGE);
-									List<Button> buttonsLocalLang = (listOfButtons.get("residenceStatusLocalLanguage") == null) ? new ArrayList<>() : listOfButtons.get("residenceStatusLocalLanguage");
-									buttonsLocalLang.add(buttonLocalLang);
-									listOfButtons.put("residenceStatusLocalLanguage", buttonsLocalLang);
-								}
-							});
+			case "residencestatus":
+				List<GenericDto> residenceAppLanguage = (masterSyncService
+						.getIndividualType(ApplicationContext.applicationLanguage())).stream()
+								.collect(Collectors.toList());
+				List<GenericDto> residenceLocalLanguage = (masterSyncService
+						.getIndividualType(ApplicationContext.localLanguage())).stream().collect(Collectors.toList());
+				if (residenceAppLanguage.size() == 2 && residenceLocalLanguage.size() == 2) {
+					residenceAppLanguage.forEach(genericDto -> {
+						residenceLocalLanguage.forEach(genericDtoLocalLang -> {
+							if (genericDto.getCode().equals(genericDtoLocalLang.getCode())) {
+								Button button = new Button(genericDto.getName());
+								button.setId("residenceStatus" + genericDto.getCode());
+								List<Button> buttons = (listOfButtons.get("residenceStatus") == null)
+										? new ArrayList<>()
+										: listOfButtons.get("residenceStatus");
+								buttons.add(button);
+								listOfButtons.put("residenceStatus", buttons);
+								Button buttonLocalLang = new Button(genericDtoLocalLang.getName());
+								buttonLocalLang.setId("residenceStatus" + genericDtoLocalLang.getCode()
+										+ RegistrationConstants.LOCAL_LANGUAGE);
+								List<Button> buttonsLocalLang = (listOfButtons
+										.get("residenceStatusLocalLanguage") == null) ? new ArrayList<>()
+												: listOfButtons.get("residenceStatusLocalLanguage");
+								buttonsLocalLang.add(buttonLocalLang);
+								listOfButtons.put("residenceStatusLocalLanguage", buttonsLocalLang);
+							}
 						});
-					}		
-					break;
-					
-				default:
-					// TODO
-					break;
+					});
+				}
+				break;
+
+			default:
+				// TODO
+				break;
 			}
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error("populateDropDowns", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					ExceptionUtils.getStackTrace(e));
 		}
 	}
-	
+
 	/**
 	 * setting the registration navigation label to lost uin
 	 */
@@ -835,12 +922,9 @@ public class DemographicDetailController extends BaseController {
 	/**
 	 * Gets the age.
 	 *
-	 * @param year
-	 *            the year
-	 * @param month
-	 *            the month
-	 * @param date
-	 *            the date
+	 * @param year  the year
+	 * @param month the month
+	 * @param date  the date
 	 * @return the age
 	 */
 	String getAge(String year, String month, String date) {
@@ -1095,13 +1179,33 @@ public class DemographicDetailController extends BaseController {
 	 */
 	private void configureMethodsForAddress(int s, int p, int size) {
 		try {
-			retrieveAndPopulateLocationByHierarchy(listOfComboBoxWithObject.get(orderOfAddress.get(s)),
-					listOfComboBoxWithObject.get(orderOfAddress.get(p)),
-					listOfComboBoxWithObject.get(orderOfAddress.get(p) + RegistrationConstants.LOCAL_LANGUAGE));
+			retrieveAndPopulateLocationByHierarchy(listOfComboBoxWithObject.get(presentAddress.get(s)),
+					listOfComboBoxWithObject.get(presentAddress.get(p)),
+					listOfComboBoxWithObject.get(presentAddress.get(p) + RegistrationConstants.LOCAL_LANGUAGE));
 
 			for (int i = p + 1; i < size; i++) {
-				listOfComboBoxWithObject.get(orderOfAddress.get(i)).getItems().clear();
-				listOfComboBoxWithObject.get(orderOfAddress.get(i) + RegistrationConstants.LOCAL_LANGUAGE).getItems()
+				listOfComboBoxWithObject.get(presentAddress.get(i)).getItems().clear();
+				listOfComboBoxWithObject.get(presentAddress.get(i) + RegistrationConstants.LOCAL_LANGUAGE).getItems()
+						.clear();
+			}
+
+			retrieveAndPopulateLocationByHierarchy(listOfComboBoxWithObject.get(permanentAddress.get(s)),
+					listOfComboBoxWithObject.get(permanentAddress.get(p)),
+					listOfComboBoxWithObject.get(permanentAddress.get(p) + RegistrationConstants.LOCAL_LANGUAGE));
+
+			for (int i = p + 1; i < size; i++) {
+				listOfComboBoxWithObject.get(permanentAddress.get(i)).getItems().clear();
+				listOfComboBoxWithObject.get(permanentAddress.get(i) + RegistrationConstants.LOCAL_LANGUAGE).getItems()
+						.clear();
+			}
+
+			retrieveAndPopulateLocationByHierarchy(listOfComboBoxWithObject.get(pobAddress.get(s)),
+					listOfComboBoxWithObject.get(pobAddress.get(p)),
+					listOfComboBoxWithObject.get(pobAddress.get(p) + RegistrationConstants.LOCAL_LANGUAGE));
+
+			for (int i = p + 1; i < size; i++) {
+				listOfComboBoxWithObject.get(pobAddress.get(i)).getItems().clear();
+				listOfComboBoxWithObject.get(pobAddress.get(i) + RegistrationConstants.LOCAL_LANGUAGE).getItems()
 						.clear();
 			}
 		} catch (RuntimeException runtimeException) {
@@ -1185,7 +1289,9 @@ public class DemographicDetailController extends BaseController {
 				switch (schemaField.getType()) {
 				case RegistrationConstants.SIMPLE_TYPE:
 					if (schemaField.getControlType().equals(RegistrationConstants.DROPDOWN)
-							|| Arrays.asList(orderOfAddress).contains(schemaField.getId())) {
+							|| Arrays.asList(presentAddress).contains(schemaField.getId())
+							|| Arrays.asList(permanentAddress).contains(schemaField.getId())
+							|| Arrays.asList(pobAddress).contains(schemaField.getId())) {
 						populateFieldValue(listOfComboBoxWithObject.get(schemaField.getId()),
 								listOfComboBoxWithObject
 										.get(schemaField.getId() + RegistrationConstants.LOCAL_LANGUAGE),
@@ -1206,7 +1312,9 @@ public class DemographicDetailController extends BaseController {
 							listOfTextField.get(schemaField.getId() + "__" + "yyyy").setText(dateParts[0]);
 						}
 					} else if (RegistrationConstants.DROPDOWN.equalsIgnoreCase(schemaField.getControlType())
-							|| Arrays.asList(orderOfAddress).contains(schemaField.getId())) {
+							|| Arrays.asList(presentAddress).contains(schemaField.getId())
+							|| Arrays.asList(permanentAddress).contains(schemaField.getId())
+							|| Arrays.asList(pobAddress).contains(schemaField.getId())) {
 						ComboBox<GenericDto> platformField = listOfComboBoxWithObject.get(schemaField.getId());
 						if (platformField != null) {
 							platformField.setValue(new GenericDto((String) value, (String) value, "eng"));
