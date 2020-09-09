@@ -1778,20 +1778,17 @@ public class RegistrationConstants {
 
 	public static final String EXCEPTION_PHOTO = "Exception_Photo";
 
+	public static final String EXCEPTIONAL_SCANNER_DEVICE_TYPES = "mosip.registration.scanner.device.types";
+	
+
 	// Exception Images Path
 	public static final String LEFTMIDDLE_IMG_PATH = "/images/exceptionmarks/leftMiddle.png";
 	public static final String LEFTINDEX_IMG_PATH = "/images/exceptionmarks/leftIndex.png";
 	public static final String LEFTRING_IMG_PATH = "/images/exceptionmarks/leftRing.png";
 	public static final String LEFTLITTLE_IMG_PATH = "/images/exceptionmarks/leftLittle.png";
 	public static final String LEFTTHUMB_IMG_PATH = "/images/exceptionmarks/leftThumb.png";
-
-	public static final String RIGHTMIDDLE_IMG_PATH = "/images/exceptionmarks/rightMiddle.png";
-	public static final String RIGHTINDEX_IMG_PATH = "/images/exceptionmarks/rightIndex.png";
-	public static final String RIGHTRING_IMG_PATH = "/images/exceptionmarks/rightRing.png";
-	public static final String RIGHTLITTLE_IMG_PATH = "/images/exceptionmarks/rightLittle.png";
-	public static final String RIGHTTHUMB_IMG_PATH = "/images/exceptionmarks/rightThumb.png";
-	
 	public static final String RIGHTEYE_IMG_PATH = "/images/exceptionmarks/lightBlueCrossMark.png";
 	public static final String LEFTEYE_IMG_PATH = "/images/exceptionmarks/lightBlueCrossMark.png";
+
 
 }

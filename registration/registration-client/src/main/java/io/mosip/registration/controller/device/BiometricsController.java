@@ -1953,17 +1953,20 @@ public class BiometricsController extends BaseController /* implements Initializ
 		boolean result = MVEL.evalToBoolean(expression, capturedDetails);
 
 		if (result && considerExceptionAsCaptured) {
-		      if (getRegistrationDTOFromSession() != null
-		            && getRegistrationDTOFromSession().getBiometricExceptions() != null
-		            && !getRegistrationDTOFromSession().getBiometricExceptions().isEmpty()) {
-		         for(Entry<String, BiometricsException> bs: getRegistrationDTOFromSession().getBiometricExceptions().entrySet()){
-		            if(bs.getValue().getIndividualType().equalsIgnoreCase("applicant")){
-		               result = getRegistrationDTOFromSession().getDocuments().containsKey("proofOfException");
-		               break;
-		            }
-		         }
-		      }
-		   }
+
+			if (getRegistrationDTOFromSession() != null
+					&& getRegistrationDTOFromSession().getBiometricExceptions() != null
+					&& !getRegistrationDTOFromSession().getBiometricExceptions().isEmpty()) {
+				for (Entry<String, BiometricsException> bs : getRegistrationDTOFromSession().getBiometricExceptions()
+						.entrySet()) {
+					if (bs.getValue().getIndividualType().equalsIgnoreCase("applicant")) {
+						result = getRegistrationDTOFromSession().getDocuments().containsKey("proofOfException");
+						break;
+					}
+				}
+			}
+		}
+
 		LOGGER.debug("REGISTRATION - BIOMETRICS - refreshContinueButton", RegistrationConstants.APPLICATION_ID,
 				RegistrationConstants.APPLICATION_NAME, "capturedDetails >> " + capturedDetails);
 		LOGGER.debug("REGISTRATION - BIOMETRICS - refreshContinueButton", RegistrationConstants.APPLICATION_ID,
