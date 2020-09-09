@@ -81,13 +81,18 @@ public class RegistrationDTO {
 	private String acknowledgeReceiptName;
 
 	public Map<String, byte[]> streamImages = new HashMap<>();
+	private boolean isIntroducerBased;
+	private boolean isPrimaryGuardianBiometricsMandatory;
+	private boolean isSecondaryGuardianBiometricsMandatory;
 
 	public void addDemographicField(String fieldId, String value) {
+
 		this.demographics.put(fieldId, (value != null && !value.isEmpty()) ? value : null);
 	}
 
 	public void addDemographicField(String fieldId, String applicationLanguage, String value, String localLanguage,
 			String localValue) {
+
 		List<SimpleDto> values = new ArrayList<SimpleDto>();
 		if (value != null && !value.isEmpty())
 			values.add(new SimpleDto(applicationLanguage, value));
@@ -116,7 +121,7 @@ public class RegistrationDTO {
 			this.isChild = this.age < minAge;
 		}
 	}
-	
+
 	public void setDateField(String fieldId, String dateString) {
 		if (isValidValue(dateString)) {
 			LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern(DATE_FORMAT));
@@ -234,6 +239,14 @@ public class RegistrationDTO {
 		allIdentityDetails.put("isLost", RegistrationConstants.PACKET_TYPE_LOST.equals(this.registrationCategory));
 		allIdentityDetails.put("age", this.age);
 		allIdentityDetails.put("isChild", this.isChild);
+		allIdentityDetails.put("isIntroducerBased", this.isIntroducerBased);
+
+		this.isPrimaryGuardianBiometricsMandatory = isChild && !isIntroducerBased;
+		allIdentityDetails.put("isPrimaryGuardianBiometricsMandatory", this.isPrimaryGuardianBiometricsMandatory);
+
+		this.isSecondaryGuardianBiometricsMandatory = isPrimaryGuardianBiometricsMandatory
+				&& isSecondaryGuardianBiometricsMandatory;
+		allIdentityDetails.put("isSecondaryGuardianBiometricsMandatory", this.isSecondaryGuardianBiometricsMandatory);
 
 		allIdentityDetails.put("updatableFields",
 				this.updatableFields == null ? Collections.EMPTY_LIST : this.updatableFields);
@@ -313,4 +326,76 @@ public class RegistrationDTO {
 
 		return qualityScore;
 	}
+
+	public void setIntroducerBased(String fieldId, String indroducerBasedValue) {
+
+		if (demographics.containsKey(fieldId)) {
+			Object obj = demographics.get(fieldId);
+
+			if (obj instanceof String) {
+				isIntroducerBased = ((String) obj).equalsIgnoreCase(indroducerBasedValue) ? true : false;
+			} else {
+				List<SimpleDto> simpleDtos = (List<SimpleDto>) obj;
+				SimpleDto simpleDto = simpleDtos.get(0);
+				isIntroducerBased = simpleDto.getValue().equalsIgnoreCase(indroducerBasedValue) ? true : false;
+
+			}
+		}
+
+		else {
+			isIntroducerBased = false;
+		}
+	}
+
+	public void setPrimaryGuardianDetailsAvailable(List<String> andFields, List<String> orFields) {
+
+		isPrimaryGuardianBiometricsMandatory = isAllCaptured(andFields, true);
+
+		if (isPrimaryGuardianBiometricsMandatory) {
+			isPrimaryGuardianBiometricsMandatory = isAllCaptured(orFields, false);
+		}
+	}
+
+	public void setSecondaryGuardianDetailsAvailable(List<String> andFields, List<String> orFields) {
+
+		isSecondaryGuardianBiometricsMandatory = isAllCaptured(andFields, true);
+
+		if (isSecondaryGuardianBiometricsMandatory) {
+			isSecondaryGuardianBiometricsMandatory = isAllCaptured(orFields, false);
+		}
+	}
+
+	private boolean isAllCaptured(List<String> fieldIds, boolean isAllMandatory) {
+		boolean isCaptured = false;
+
+		for (String fieldId : fieldIds) {
+			if (demographics.containsKey(fieldId) && demographics.get(fieldId) != null) {
+				Object obj = demographics.get(fieldId);
+
+				if (obj instanceof String) {
+					isCaptured = ((String) obj).isEmpty() ? false : true;
+				} else {
+					List<SimpleDto> simpleDtos = (List<SimpleDto>) obj;
+					SimpleDto simpleDto = simpleDtos.get(0);
+
+					isCaptured = simpleDto.getValue().isEmpty() ? false : true;
+				}
+			}
+
+			else {
+				isCaptured = false;
+			}
+
+			if (isAllMandatory && !isCaptured) {
+				return false;
+			}
+
+			if (!isAllMandatory && isCaptured) {
+				return true;
+			}
+		}
+
+		return isCaptured;
+	}
+
 }

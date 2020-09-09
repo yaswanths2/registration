@@ -367,7 +367,6 @@ public class DemographicDetailController extends BaseController {
 		permanentAddress = permanentMap.values().stream().collect(Collectors.toList());
 		pobAddress = pobMap.values().stream().collect(Collectors.toList());
 
-	
 	}
 
 	private void disablePreRegFetch() {
@@ -1158,6 +1157,13 @@ public class DemographicDetailController extends BaseController {
 					break;
 				}
 			}
+
+			registrationDTO.setIntroducerBased("registrationType", "Introducer-based");
+			registrationDTO.setSecondaryGuardianDetailsAvailable(
+					Arrays.asList("secondary_guardian_last_name", "secondary_guardian_middle_name",
+							"secondary_guardian_first_name"),
+					Arrays.asList("secondary_guardian_RID", "secondary_guardian_UIN"));
+
 		} catch (Exception exception) {
 			LOGGER.error("addDemoGraphicDetailsToSession", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					exception.getMessage() + ExceptionUtils.getStackTrace(exception));
