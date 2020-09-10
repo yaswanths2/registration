@@ -1997,11 +1997,11 @@ public class BiometricsController extends BaseController /* implements Initializ
 		String operator = AND_OPERATOR;
 		switch (getRegistrationDTOFromSession().getRegistrationCategory()) {
 		case RegistrationConstants.PACKET_TYPE_NEW:
-			operator = "introducer".equalsIgnoreCase(currentSubType) ? OR_OPERATOR : AND_OPERATOR;
+			operator = "applicant".equalsIgnoreCase(currentSubType) ? AND_OPERATOR : OR_OPERATOR;
 			break;
 		case RegistrationConstants.PACKET_TYPE_UPDATE:
 			operator = getRegistrationDTOFromSession().isBiometricMarkedForUpdate()
-					? ("introducer".equalsIgnoreCase(currentSubType) ? OR_OPERATOR : AND_OPERATOR)
+					? ("applicant".equalsIgnoreCase(currentSubType) ? AND_OPERATOR : OR_OPERATOR)
 					: OR_OPERATOR;
 			break;
 		case RegistrationConstants.PACKET_TYPE_LOST:
