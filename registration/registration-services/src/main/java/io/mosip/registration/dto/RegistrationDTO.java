@@ -327,24 +327,8 @@ public class RegistrationDTO {
 		return qualityScore;
 	}
 
-	public void setIntroducerBased(String fieldId, String indroducerBasedValue) {
-
-		if (demographics.containsKey(fieldId)) {
-			Object obj = demographics.get(fieldId);
-
-			if (obj instanceof String) {
-				isIntroducerBased = ((String) obj).equalsIgnoreCase(indroducerBasedValue) ? true : false;
-			} else {
-				List<SimpleDto> simpleDtos = (List<SimpleDto>) obj;
-				SimpleDto simpleDto = simpleDtos.get(0);
-				isIntroducerBased = simpleDto.getValue().equalsIgnoreCase(indroducerBasedValue) ? true : false;
-
-			}
-		}
-
-		else {
-			isIntroducerBased = false;
-		}
+	public void setIntroducerBased(String fieldId, String introducerBasedValue) {
+		isIntroducerBased = introducerBasedValue.equalsIgnoreCase("Introducer-based") ?  true : false;
 	}
 
 	public void setPrimaryGuardianDetailsAvailable(List<String> andFields, List<String> orFields) {

@@ -576,6 +576,26 @@ public class DemographicDetailController extends BaseController {
 		vboxAgeField.getChildren().addAll(ageFieldLabel, ageField);
 
 		listOfTextField.put(RegistrationConstants.AGE_FIELD + languageType, ageField);
+		
+		ageField.textProperty().addListener((observable, oldValue, newValue) -> {
+			List<UiSchemaDTO> introducerFields = fetchByGroup("Introducer");
+			List<UiSchemaDTO> primaryGuardianFields = fetchByGroup("PrimaryGuardian");
+			List<UiSchemaDTO> secondaryGuardianFields = fetchByGroup("SecondaryGuardian");
+			if(Integer.parseInt(newValue) < minAge) {
+				if (!isIntroducerBased()) {
+					setTextFieldVisibility(introducerFields, false);
+					setTextFieldVisibility(primaryGuardianFields, true);
+					setTextFieldVisibility(secondaryGuardianFields, true);
+				} else {
+					setTextFieldVisibility(introducerFields, true);
+					setTextFieldVisibility(primaryGuardianFields, false);
+					setTextFieldVisibility(secondaryGuardianFields, false);
+				}
+			} else {
+				setTextFieldVisibility(primaryGuardianFields, false);
+				setTextFieldVisibility(secondaryGuardianFields, false);
+			}
+		});
 
 		ageField.setPromptText(localLanguage ? localLabelBundle.getString(RegistrationConstants.AGE_FIELD)
 				: applicationLabelBundle.getString(RegistrationConstants.AGE_FIELD));
@@ -684,7 +704,7 @@ public class DemographicDetailController extends BaseController {
 
 		hB.getChildren().add(validationMessage);
 		hB.setStyle("-fx-background-color:WHITE");
-		vbox.getChildren().add(hB);
+		vbox.getChildren().add(hB);	
 
 		fxUtils.onTypeFocusUnfocusListener(parentFlowPane, field);
 		return vbox;
@@ -717,7 +737,6 @@ public class DemographicDetailController extends BaseController {
 								.addAll(masterSyncService.getIndividualType(ApplicationContext.localLanguage()));
 					}
 					break;
-
 				default:
 					if (k.endsWith("LocalLanguage")) {
 						if (isLocalLanguageAvailable() && !isAppLangAndLocalLangSame()) {
@@ -727,6 +746,9 @@ public class DemographicDetailController extends BaseController {
 					} else {
 						listOfComboBoxWithObject.get(k).getItems()
 								.addAll(masterSyncService.getDynamicField(k, ApplicationContext.applicationLanguage()));
+					}
+					if (isRegistrationType(k)) {
+						listOfComboBoxWithObject.get(k).getSelectionModel().selectFirst();
 					}
 					break;
 				}
@@ -752,8 +774,54 @@ public class DemographicDetailController extends BaseController {
 		}
 		helperMethodForComboBox(field, fieldName, schema, label, validationMessage, vbox, languageType);
 		field.setConverter((StringConverter<GenericDto>) uiRenderForComboBox);
+		// TODO add listener
+		if (isRegistrationType(fieldName)) {
+			field.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
+				getRegistrationDTOFromSession().setIntroducerBased("registrationType", newValue.getName());
+				List<UiSchemaDTO> introducerFields = fetchByGroup("Introducer");
+				List<UiSchemaDTO> primaryGuardianFields = fetchByGroup("PrimaryGuardian");
+				List<UiSchemaDTO> secondaryGuardianFields = fetchByGroup("SecondaryGuardian");
+				if (isIntroducerBased()) {
+					setTextFieldVisibility(introducerFields, true);
+					setTextFieldVisibility(primaryGuardianFields, false);
+					setTextFieldVisibility(secondaryGuardianFields, false);
+				} else {
+					setTextFieldVisibility(introducerFields, false);
+					if (age < minAge) {
+						setTextFieldVisibility(primaryGuardianFields, true);
+						setTextFieldVisibility(secondaryGuardianFields, true);
+					}
+				}
+			});
+		}
 		listOfComboBoxWithObject.put(fieldName + languageType, field);
 		return vbox;
+	}
+
+	private void setTextFieldVisibility(List<UiSchemaDTO> fields, boolean isVisible) {
+		for (UiSchemaDTO field : fields) {
+			if (listOfTextField.containsKey(field.getId())) {
+				VBox vbox = (VBox) listOfTextField.get(field.getId()).getParent();
+				if (vbox != null && vbox.getParent() != null && vbox.getParent().getParent() != null) {
+					vbox.getParent().getParent().setVisible(isVisible);
+					vbox.getParent().getParent().setManaged(isVisible);
+				}
+			}
+		}
+	}
+
+	private List<UiSchemaDTO> fetchByGroup(String group) {
+		return validation.getValidationMap().values().stream()
+				.filter(schemaDto -> schemaDto.getGroup() != null && schemaDto.getGroup().equalsIgnoreCase(group))
+				.collect(Collectors.toList());
+	}
+
+	private boolean isRegistrationType(String id) {
+		return (id != null && id.equalsIgnoreCase("registrationType")) ? true : false;
+	}
+
+	private boolean isIntroducerBased() {
+		return getRegistrationDTOFromSession().isIntroducerBased();
 	}
 
 	public <T> VBox addContentWithButtons(String fieldName, UiSchemaDTO schema, String languageType) {
@@ -1158,7 +1226,6 @@ public class DemographicDetailController extends BaseController {
 				}
 			}
 
-			registrationDTO.setIntroducerBased("registrationType", "Introducer-based");
 			registrationDTO.setSecondaryGuardianDetailsAvailable(
 					Arrays.asList("secondary_guardian_last_name", "secondary_guardian_middle_name",
 							"secondary_guardian_first_name"),
