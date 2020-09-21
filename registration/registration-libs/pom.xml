@@ -21,12 +21,10 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-keygenerator-bouncycastle</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-crypto-jce</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -83,47 +81,38 @@
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-logger-logback</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-core</artifactId>
-				<version>1.0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-auditmanager-api</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idvalidator-rid</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idvalidator-uin</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idvalidator-prid</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-idgenerator-rid</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-crypto-signature</artifactId>
-			<version>${mosip.core.kernel.version}</version>
 		</dependency>
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-templatemanager-velocity</artifactId>
-				<version>${mosip.core.kernel.version}</version>
 				<exclusions>
 					<exclusion>
 						<groupId>dom4j</groupId>
@@ -134,27 +123,22 @@
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-qrcodegenerator-zxing</artifactId>
-				<version>${mosip.core.kernel.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-pdfgenerator-itext</artifactId>
-				<version>${mosip.core.kernel.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-virusscanner-clamav</artifactId>
-				<version>${mosip.core.kernel.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-transliteration-icu4j</artifactId>
-				<version>${mosip.core.kernel.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.mosip.kernel</groupId>
 				<artifactId>kernel-applicanttype-api</artifactId>
-				<version>${mosip.core.kernel.version}</version>
 			</dependency>
 			<dependency>
 			    <groupId>org.javassist</groupId>
