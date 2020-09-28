@@ -9,7 +9,6 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import io.mosip.kernel.core.exception.ExceptionUtils;
-import io.mosip.registration.service.security.ClientSecurityFacade;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;

@@ -6,10 +6,13 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.registration.service.security.ClientSecurityFacade;
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.core.http.RequestWrapper;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
@@ -22,7 +25,6 @@ import io.mosip.registration.dto.tpm.PublicKeyUploadRequestDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.service.security.ClientSecurity;
 import io.mosip.registration.service.sync.TPMPublicKeySyncService;
 import io.mosip.registration.tpm.spi.TPMUtil;
 import io.mosip.registration.util.restclient.ServiceDelegateUtil;
@@ -41,9 +43,21 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 public class TPMPublicKeySyncServiceImpl implements TPMPublicKeySyncService {
 
 	private static final Logger LOGGER = AppConfig.getLogger(TPMPublicKeySyncServiceImpl.class);
-	
+
 	@Autowired
 	private ServiceDelegateUtil serviceDelegateUtil;
+
+	@Autowired
+	private ClientCryptoFacade clientCryptoFacade;
+
+	private ClientCryptoService clientCryptoService;
+
+	@PostConstruct
+	public void init() {
+
+		clientCryptoFacade.setIsTPMRequired(true);
+		clientCryptoService = clientCryptoFacade.getClientSecurity();
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -60,13 +74,13 @@ public class TPMPublicKeySyncServiceImpl implements TPMPublicKeySyncService {
 		try {
 			// Get the Public Key of the TPM Signing Key
 			RequestWrapper<PublicKeyUploadRequestDTO> tpmKeyUploadRequest = new RequestWrapper<>();
-			tpmKeyUploadRequest.setId(
-					String.valueOf(ApplicationContext.map().get(RegistrationConstants.REGISTRATION_CLIENT)));
+			tpmKeyUploadRequest
+					.setId(String.valueOf(ApplicationContext.map().get(RegistrationConstants.REGISTRATION_CLIENT)));
 			tpmKeyUploadRequest.setVersion(RegistrationConstants.VER);
 			tpmKeyUploadRequest.setRequesttime(DateUtils.getUTCCurrentDateTime());
 			PublicKeyUploadRequestDTO publicKeyUploadRequestDTO = new PublicKeyUploadRequestDTO();
 			publicKeyUploadRequestDTO.setMachineName(InetAddress.getLocalHost().getHostName());
-			publicKeyUploadRequestDTO.setPublicKey(ClientSecurityFacade.getClientInstancePublicKey());
+			publicKeyUploadRequestDTO.setPublicKey(CryptoUtil.encodeBase64(clientCryptoService.getSigningPublicPart()));
 			tpmKeyUploadRequest.setRequest(publicKeyUploadRequestDTO);
 
 			Map<String, Object> publicKeyResponse = (Map<String, Object>) serviceDelegateUtil.post(

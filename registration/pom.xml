@@ -15,7 +15,7 @@
 	<artifactId>registration-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>registration</name>
-	
+
 	<description>Parent project of MOSIP Registration</description>
 
 	<properties>
@@ -86,9 +86,9 @@
 
 		<!-- support jaxb in java11 -->
 		<javax.activation.version>1.2.0</javax.activation.version>
-        <jaxb.api.version>2.3.0</jaxb.api.version>
+		<jaxb.api.version>2.3.0</jaxb.api.version>
 		<openjfx.version>11.0.2</openjfx.version>
-		
+
 		<sonar.exclusions>
 			src/main/java/io/mosip/registration/util/**/*,
 			src/main/java/io/mosip/registration/repositories/**/*,
@@ -373,36 +373,41 @@
 				<version>${powermock-api-mockito2.version}</version>
 				<scope>test</scope>
 			</dependency>
-				<!-- jaxb for java 11 -->
+			<!-- jaxb for java 11 -->
 			<dependency>
-			    <groupId>com.sun.activation</groupId>
-			    <artifactId>javax.activation</artifactId>
-			    <version>${javax.activation.version}</version>
+				<groupId>com.sun.activation</groupId>
+				<artifactId>javax.activation</artifactId>
+				<version>${javax.activation.version}</version>
 			</dependency>
 
 			<dependency>
-			    <groupId>javax.xml.bind</groupId>
-			    <artifactId>jaxb-api</artifactId>
-			    <version>${jaxb.api.version}</version>
+				<groupId>javax.xml.bind</groupId>
+				<artifactId>jaxb-api</artifactId>
+				<version>${jaxb.api.version}</version>
 			</dependency>
 
 			<dependency>
-			    <groupId>com.sun.xml.bind</groupId>
-			    <artifactId>jaxb-core</artifactId>
-			    <version>${jaxb.api.version}</version>
+				<groupId>com.sun.xml.bind</groupId>
+				<artifactId>jaxb-core</artifactId>
+				<version>${jaxb.api.version}</version>
 			</dependency>
 
 			<dependency>
-			    <groupId>com.sun.xml.bind</groupId>
-			    <artifactId>jaxb-impl</artifactId>
-			    <version>${jaxb.api.version}</version>
+				<groupId>com.sun.xml.bind</groupId>
+				<artifactId>jaxb-impl</artifactId>
+				<version>${jaxb.api.version}</version>
 			</dependency>
 
-		<dependency>
-		    <groupId>cglib</groupId>
-		    <artifactId>cglib-nodep</artifactId>
-		    <version>3.2.7</version>
-		</dependency>
+			<dependency>
+				<groupId>cglib</groupId>
+				<artifactId>cglib-nodep</artifactId>
+				<version>3.2.7</version>
+			</dependency>
+			<dependency>
+				<groupId>io.mosip.kernel</groupId>
+				<artifactId>kernel-keymanager-service</artifactId>
+				<version>1.2.0-SNAPSHOT</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -429,32 +434,18 @@
 					<doclint>none</doclint>
 				</configuration>
 			</plugin>
-			
-			<!-- <plugin>
-					<groupId>org.sonarsource.scanner.maven</groupId>
-					<artifactId>sonar-maven-plugin</artifactId>
-					<version>${maven.sonar.version}</version>
-					   <executions>
-							<execution>
-								<phase>verify</phase>
-								<goals>
-									<goal>sonar</goal>
-								</goals>
-							</execution>
-					   </executions>
-				</plugin> -->
+
+			<!-- <plugin> <groupId>org.sonarsource.scanner.maven</groupId> <artifactId>sonar-maven-plugin</artifactId> 
+				<version>${maven.sonar.version}</version> <executions> <execution> <phase>verify</phase> 
+				<goals> <goal>sonar</goal> </goals> </execution> </executions> </plugin> -->
 
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>${maven.jacoco.version}</version>
-<!-- 				<configuration>
-					<excludes>
-						<exclude>**/identy_face_sdk.jar</exclude>
-						<exclude>identy_face_sdk.jar</exclude>
-					</excludes>
-				</configuration>
- -->				<executions>
+				<!-- <configuration> <excludes> <exclude>**/identy_face_sdk.jar</exclude> 
+					<exclude>identy_face_sdk.jar</exclude> </excludes> </configuration> -->
+				<executions>
 					<execution>
 						<goals>
 							<goal>prepare-agent</goal>
@@ -480,7 +471,7 @@
 				<sonar.projectName>Registration-DEV</sonar.projectName>
 				<sonar.projectVersion>master</sonar.projectVersion>
 				<sonar.test.exclusions>**/test/**/*.*</sonar.test.exclusions>
-			       <!-- <sonar.exclusions>**/ai/**/*.*,**/jdbc/**/*.*,**/mpt/**/*.*,**/jcr/**/*.*,**/JDBC*</sonar.exclusions> -->
+				<!-- <sonar.exclusions>**/ai/**/*.*,**/jdbc/**/*.*,**/mpt/**/*.*,**/jcr/**/*.*,**/JDBC*</sonar.exclusions> -->
 				<sonar.jacoco.reportPaths>
 					target/jacoco.exec
 				</sonar.jacoco.reportPaths>

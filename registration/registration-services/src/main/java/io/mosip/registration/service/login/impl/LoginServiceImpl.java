@@ -15,12 +15,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.audit.AuditManagerService;
 import io.mosip.registration.config.AppConfig;
@@ -48,11 +51,9 @@ import io.mosip.registration.service.login.LoginService;
 import io.mosip.registration.service.operator.UserDetailService;
 import io.mosip.registration.service.operator.UserOnboardService;
 import io.mosip.registration.service.operator.UserSaltDetailsService;
-import io.mosip.registration.service.security.ClientSecurity;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.service.sync.PublicKeySync;
 import io.mosip.registration.service.sync.TPMPublicKeySyncService;
-
 
 /**
  * Implementation for {@link LoginService}
@@ -63,7 +64,7 @@ import io.mosip.registration.service.sync.TPMPublicKeySyncService;
  */
 @Service
 public class LoginServiceImpl extends BaseService implements LoginService {
-	
+
 	private final String PUBLIC_KEY_SYNC_STEP = "PublicKey Sync";
 	private final String MACHINE_KEY_VERIFICATION_STEP = "Machine-Key verification";
 	private final String GLOBAL_PARAM_SYNC_STEP = "Global parameter Sync";
@@ -123,12 +124,24 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 	@Autowired
 	private UserSaltDetailsService userSaltDetailsService;
-	
+
 	@Autowired
 	private TPMPublicKeySyncService tpmPublicKeySyncService;
-	
+
+//	@Autowired
+//	private ClientSecurity clientSecurity;
+
 	@Autowired
-	private ClientSecurity clientSecurity;
+	private ClientCryptoFacade clientCryptoFacade;
+
+	private ClientCryptoService clientCryptoService;
+
+	@PostConstruct
+	public void init() {
+
+		clientCryptoFacade.setIsTPMRequired(true);
+		clientCryptoService = clientCryptoFacade.getClientSecurity();
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -156,10 +169,10 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 			} else {
 				loginModes = appAuthenticationDAO.getModesOfLogin(authType, roleList);
 			}
-			
+
 			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					"Completed fetching list of login modes");
-			
+
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(regBaseCheckedException));
@@ -189,9 +202,9 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 					AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
 			userDTO = MAPPER_FACADE.map(userDetailDAO.getUserDetail(userId), UserDTO.class);
-			
+
 			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID, "Completed fetching User details");
-			
+
 		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(regBaseCheckedException));
@@ -217,11 +230,11 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 		try {
 			getRegistrationCenterDetailsValidation(centerId, langCode);
-			
+
 			auditFactory.audit(AuditEvent.FETCH_CNTR_DET, Components.CENTER_DETAIL,
 					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
-			registrationCenterDetailDTO = registrationCenterDAO.getRegistrationCenterDetails(centerId, langCode);			
+			registrationCenterDetailDTO = registrationCenterDAO.getRegistrationCenterDetails(centerId, langCode);
 
 			LOGGER.info(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					"Completed fetching of Center details");
@@ -245,21 +258,21 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 				"Fetching list of Screens to be Authorized");
-		
+
 		AuthorizationDTO authorizationDTO = null;
-		
+
 		try {
 			getScreenAuthorizationDetailsValidation(roleCode);
-			
-			auditFactory.audit(AuditEvent.FETCH_SCR_AUTH, Components.SCREEN_AUTH, RegistrationConstants.APPLICATION_NAME,
-					AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
+
+			auditFactory.audit(AuditEvent.FETCH_SCR_AUTH, Components.SCREEN_AUTH,
+					RegistrationConstants.APPLICATION_NAME, AuditReferenceIdTypes.APPLICATION_ID.getReferenceTypeId());
 
 			LOGGER.info(LoggerConstants.LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					"Completed fetching list of Screens to be Authorized");
-			
+
 			authorizationDTO = screenAuthorizationDAO.getScreenAuthorizationDetails(roleCode);
 
-		} catch(RegBaseCheckedException regBaseCheckedException) {
+		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(regBaseCheckedException));
 		}
@@ -277,10 +290,10 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 
 		LOGGER.info("REGISTRATION - UPDATELOGINPARAMS - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID,
 				"Updating Login Params");
-		
+
 		try {
 			userDTOValidation(userDTO);
-			
+
 			UserDetail userDetail = userDetailDAO.getUserDetail(userDTO.getId());
 
 			userDetail.setLastLoginDtimes(userDTO.getLastLoginDtimes());
@@ -293,102 +306,111 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 			LOGGER.info("REGISTRATION - UPDATELOGINPARAMS - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID,
 					"Updated Login Params");
 
-		} catch(RegBaseCheckedException regBaseCheckedException) {
+		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(regBaseCheckedException));
 		}
 	}
-	
-	/* Must follow the same order on every initial sync
-	 * 1. signing key sync
-	 * 2. verify machine-key mapping
-	 * 3. global parameters sync
-	 * 4. client-settings / master-data sync
-	 * 5. user details sync
-	 * 6. user salts sync
+
+	/*
+	 * Must follow the same order on every initial sync 1. signing key sync 2.
+	 * verify machine-key mapping 3. global parameters sync 4. client-settings /
+	 * master-data sync 5. user details sync 6. user salts sync
 	 * 
 	 * @see io.mosip.registration.service.login.LoginService#initialSync()
 	 */
 	@Override
 	public List<String> initialSync() {
 		LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "Started Initial sync");
-		List<String> results = new LinkedList<>();		
-		final boolean isInitialSetUp = RegistrationConstants.ENABLE.equalsIgnoreCase(getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP));		
+		List<String> results = new LinkedList<>();
+		final boolean isInitialSetUp = RegistrationConstants.ENABLE
+				.equalsIgnoreCase(getGlobalConfigValueOf(RegistrationConstants.INITIAL_SETUP));
 		ResponseDTO responseDTO = null;
-		
-		try {			
+
+		try {
 			responseDTO = publicKeySyncImpl.getPublicKey(RegistrationConstants.JOB_TRIGGER_POINT_USER);
 			validateResponse(responseDTO, PUBLIC_KEY_SYNC_STEP);
-			
+
 			String keyIndex = tpmPublicKeySyncService.syncTPMPublicKey();
-			if(null!=keyIndex) {
+			if (null != keyIndex) {
 				ApplicationContext.map().put(RegistrationConstants.KEY_INDEX, keyIndex);
 			}
-			LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "Initial Verifiation Done : " + MACHINE_KEY_VERIFICATION_STEP);
-						
+			LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID,
+					"Initial Verifiation Done : " + MACHINE_KEY_VERIFICATION_STEP);
+
 			responseDTO = globalParamService.synchConfigData(false);
 			validateResponse(responseDTO, GLOBAL_PARAM_SYNC_STEP);
-			if(responseDTO.getSuccessResponseDTO().getOtherAttributes() != null)
+			if (responseDTO.getSuccessResponseDTO().getOtherAttributes() != null)
 				results.add(RegistrationConstants.RESTART);
-			
-			responseDTO = isInitialSetUp ? masterSyncService.getMasterSync(RegistrationConstants.OPT_TO_REG_MDS_J00001,
-								RegistrationConstants.JOB_TRIGGER_POINT_USER, keyIndex) : 
-							masterSyncService.getMasterSync(RegistrationConstants.OPT_TO_REG_MDS_J00001,
-								RegistrationConstants.JOB_TRIGGER_POINT_USER);
+
+			responseDTO = isInitialSetUp
+					? masterSyncService.getMasterSync(RegistrationConstants.OPT_TO_REG_MDS_J00001,
+							RegistrationConstants.JOB_TRIGGER_POINT_USER, keyIndex)
+					: masterSyncService.getMasterSync(RegistrationConstants.OPT_TO_REG_MDS_J00001,
+							RegistrationConstants.JOB_TRIGGER_POINT_USER);
 			validateResponse(responseDTO, CLIENTSETTINGS_SYNC_STEP);
-			
+
 			responseDTO = userDetailService.save(RegistrationConstants.JOB_TRIGGER_POINT_USER);
 			validateResponse(responseDTO, USER_DETAIL_SYNC_STEP);
 
 			responseDTO = userSaltDetailsService.getUserSaltDetails(RegistrationConstants.JOB_TRIGGER_POINT_USER);
 			validateResponse(responseDTO, USER_SALT_SYNC_STEP);
-			
+
 			results.add(RegistrationConstants.SUCCESS);
-			
+
 			LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "completed Initial sync");
-		
+
 		} catch (RegBaseCheckedException e) {
-			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, ExceptionUtils.getStackTrace(e));
-			results.add(isAuthTokenEmptyException(e) ? RegistrationConstants.AUTH_TOKEN_NOT_RECEIVED_ERROR : RegistrationConstants.FAILURE);			
+			LOGGER.error(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(e));
+			results.add(isAuthTokenEmptyException(e) ? RegistrationConstants.AUTH_TOKEN_NOT_RECEIVED_ERROR
+					: RegistrationConstants.FAILURE);
 		}
 		return results;
 	}
 
-	//Not required as this validation is handled in ClientSecurityFacade
-	/*private String verifyMachinePublicKeyMapping(boolean isInitialSetup) throws RegBaseCheckedException {
-		final boolean tpmAvailable = RegistrationConstants.ENABLE.equals(getGlobalConfigValueOf(RegistrationConstants.TPM_AVAILABILITY));
-		final String environment = getGlobalConfigValueOf(RegistrationConstants.SERVER_ACTIVE_PROFILE);
+	// Not required as this validation is handled in ClientSecurityFacade
+	/*
+	 * private String verifyMachinePublicKeyMapping(boolean isInitialSetup) throws
+	 * RegBaseCheckedException { final boolean tpmAvailable =
+	 * RegistrationConstants.ENABLE.equals(getGlobalConfigValueOf(
+	 * RegistrationConstants.TPM_AVAILABILITY)); final String environment =
+	 * getGlobalConfigValueOf(RegistrationConstants.SERVER_ACTIVE_PROFILE);
+	 * 
+	 * if(RegistrationConstants.SERVER_PROD_PROFILE.equalsIgnoreCase(environment) &&
+	 * !tpmAvailable) { LOGGER.info("REGISTRATION  - LOGINSERVICE",
+	 * APPLICATION_NAME, APPLICATION_ID, "TPM IS REQUIRED TO BE ENABLED."); throw
+	 * new RegBaseCheckedException(RegistrationExceptionConstants.TPM_REQUIRED.
+	 * getErrorCode(),
+	 * RegistrationExceptionConstants.TPM_REQUIRED.getErrorMessage()); }
+	 * 
+	 * LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID,
+	 * "CURRENT PROFILE : " + environment != null ? environment :
+	 * RegistrationConstants.SERVER_NO_PROFILE);
+	 * 
+	 * return tpmPublicKeySyncService.syncTPMPublicKey(); }
+	 */
 
-		if(RegistrationConstants.SERVER_PROD_PROFILE.equalsIgnoreCase(environment) && !tpmAvailable) {
-			LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "TPM IS REQUIRED TO BE ENABLED.");
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.TPM_REQUIRED.getErrorCode(),
-					RegistrationExceptionConstants.TPM_REQUIRED.getErrorMessage());
-		}
-
-		LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "CURRENT PROFILE : " +
-				environment != null ? environment : RegistrationConstants.SERVER_NO_PROFILE);
-
-		return tpmPublicKeySyncService.syncTPMPublicKey();
-	}*/
-	
 	private void validateResponse(ResponseDTO responseDTO, String syncStep) throws RegBaseCheckedException {
-		if(responseDTO == null)
-			throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_SYNC_NO_RESPONSE.getErrorCode(), 
+		if (responseDTO == null)
+			throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_SYNC_NO_RESPONSE.getErrorCode(),
 					RegistrationExceptionConstants.REG_SYNC_NO_RESPONSE.getErrorMessage());
-		
-		if(responseDTO.getErrorResponseDTOs() != null) {
-			if(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode()
-			.equals(responseDTO.getErrorResponseDTOs().get(0).getMessage()))
-				throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(), 
+
+		if (responseDTO.getErrorResponseDTOs() != null) {
+			if (RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode()
+					.equals(responseDTO.getErrorResponseDTOs().get(0).getMessage()))
+				throw new RegBaseCheckedException(
+						RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorCode(),
 						RegistrationExceptionConstants.AUTH_TOKEN_COOKIE_NOT_FOUND.getErrorMessage());
 			else
 				throw new RegBaseCheckedException(RegistrationExceptionConstants.REG_SYNC_FAILURE.getErrorCode(),
 						String.format(RegistrationExceptionConstants.REG_SYNC_FAILURE.getErrorMessage(), syncStep));
 		}
-		
-		LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID, "Initial Sync Done : " + syncStep);
+
+		LOGGER.info("REGISTRATION  - LOGINSERVICE", APPLICATION_NAME, APPLICATION_ID,
+				"Initial Sync Done : " + syncStep);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -477,12 +499,12 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 */
 	public ResponseDTO validateUser(String userId) {
 		ResponseDTO responseDTO = new ResponseDTO();
-		
+
 		LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Validating User");
-		
+
 		try {
 			getUserDetailValidation(userId);
-			
+
 			UserDTO userDTO = getUserDetail(userId);
 			if (userDTO == null) {
 				setErrorResponse(responseDTO, RegistrationConstants.USER_NAME_VALIDATION, null);
@@ -509,7 +531,8 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 							}
 						});
 
-						LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "Validating roles");
+						LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID,
+								"Validating roles");
 						// Checking roles
 						if (roleList.isEmpty() || !(roleList.contains(RegistrationConstants.OFFICER)
 								|| roleList.contains(RegistrationConstants.SUPERVISOR)
@@ -533,16 +556,16 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 			}
 
 			LOGGER.info(LoggerConstants.LOG_REG_LOGIN, APPLICATION_NAME, APPLICATION_ID, "completed validating user");
-			
-		} catch(RegBaseCheckedException regBaseCheckedException) {
+
+		} catch (RegBaseCheckedException regBaseCheckedException) {
 			LOGGER.error(LOG_REG_LOGIN_SERVICE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(regBaseCheckedException));
-			
+
 			setErrorResponse(responseDTO, RegistrationConstants.USER_NAME_VALIDATION, null);
 		}
 		return responseDTO;
 	}
-	
+
 	/**
 	 * Gets the modes of login validation.
 	 *
@@ -552,21 +575,21 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * @throws RegBaseCheckedException the reg base checked exception
 	 */
 	private void getModesOfLoginValidation(String authType, Set<String> roleList) throws RegBaseCheckedException {
-		
-		if(isStringEmpty(authType)) {			
+
+		if (isStringEmpty(authType)) {
 			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_LOGIN_AUTH_TYPE_EXCEPTION);
-		} else if(isSetEmpty(roleList)) {
-			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_LOGIN_ROLES_EXCEPTION);			
+		} else if (isSetEmpty(roleList)) {
+			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_LOGIN_ROLES_EXCEPTION);
 		}
 	}
-	
+
 	private void getUserDetailValidation(String userId) throws RegBaseCheckedException {
-		
-		if(isStringEmpty(userId)) {					
+
+		if (isStringEmpty(userId)) {
 			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_USER_ID_EXCEPTION);
 		}
 	}
-	
+
 	/**
 	 * Gets the registration center details validation.
 	 *
@@ -575,26 +598,27 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	 * @return the registration center details validation
 	 * @throws RegBaseCheckedException the reg base checked exception
 	 */
-	private void getRegistrationCenterDetailsValidation(String centerId, String langCode) throws RegBaseCheckedException {
-		
-		if(isStringEmpty(centerId)) {
+	private void getRegistrationCenterDetailsValidation(String centerId, String langCode)
+			throws RegBaseCheckedException {
+
+		if (isStringEmpty(centerId)) {
 			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_LOGIN_CENTER_ID_EXCEPTION);
-		} else if(isStringEmpty(langCode)) {
+		} else if (isStringEmpty(langCode)) {
 			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_LOGIN_LANG_CODE_EXCEPTION);
 		}
 	}
-	
+
 	private void getScreenAuthorizationDetailsValidation(List<String> roleCode) throws RegBaseCheckedException {
-		if(isListEmpty(roleCode)) {
+		if (isListEmpty(roleCode)) {
 			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_LOGIN_ROLES_EXCEPTION);
 		}
 	}
-	
+
 	private void userDTOValidation(UserDTO userDTO) throws RegBaseCheckedException {
-		
-		if(null == userDTO) {
+
+		if (null == userDTO) {
 			throwRegBaseCheckedException(RegistrationExceptionConstants.REG_LOGIN_USER_DTO_EXCEPTION);
-		} 
+		}
 	}
 
 }

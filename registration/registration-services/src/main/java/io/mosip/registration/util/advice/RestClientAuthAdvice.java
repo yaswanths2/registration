@@ -3,7 +3,8 @@ package io.mosip.registration.util.advice;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_ID;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
-import io.mosip.registration.service.security.ClientSecurityFacade;
+import javax.annotation.PostConstruct;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
+import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.CryptoUtil;
 import io.mosip.kernel.core.util.JsonUtils;
@@ -29,7 +32,6 @@ import io.mosip.registration.dto.AuthTokenDTO;
 import io.mosip.registration.dto.LoginUserDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
-import io.mosip.registration.service.security.ClientSecurity;
 import io.mosip.registration.tpm.spi.TPMUtil;
 import io.mosip.registration.util.healthcheck.RegistrationSystemPropertiesChecker;
 import io.mosip.registration.util.restclient.RequestHTTPDTO;
@@ -57,17 +59,29 @@ public class RestClientAuthAdvice {
 	@Autowired
 	private MachineMappingDAO machineMappingDAO;
 
+	@Autowired
+	private ClientCryptoFacade clientCryptoFacade;
+
+	@Autowired
+	private ClientCryptoService clientCryptoService;
+
+	@PostConstruct
+	public void init() {
+
+		clientCryptoFacade.setIsTPMRequired(true);
+		clientCryptoService = clientCryptoFacade.getClientSecurity();
+	}
+
 	/**
 	 * The {@link Around} advice method which be invoked for all web services. This
 	 * advice adds the Authorization Token to the Web-Service Request Header, if
 	 * authorization is required. If Authorization Token had expired, a new token
 	 * will be requested.
 	 * 
-	 * @param joinPoint
-	 *            the join point of the advice
+	 * @param joinPoint the join point of the advice
 	 * @return the response from the web-service
-	 * @throws RegBaseCheckedException
-	 *             - generalized exception with errorCode and errorMessage
+	 * @throws RegBaseCheckedException - generalized exception with errorCode and
+	 *                                 errorMessage
 	 */
 	@Around("execution(* io.mosip.registration.util.restclient.RestClientUtil.invoke(..))")
 	public Object addAuthZToken(ProceedingJoinPoint joinPoint) throws RegBaseCheckedException {
@@ -95,7 +109,7 @@ public class RestClientAuthAdvice {
 
 			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 					"Adding authZ token to web service request header if required completed" + response);
-			
+
 			if (handleInvalidTokenFromResponse(response, joinPoint)) {
 				LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 						"Adding new authZ token to web service request header if present token is invalid");
@@ -150,8 +164,8 @@ public class RestClientAuthAdvice {
 		LoginUserDTO loginUserDTO = (LoginUserDTO) ApplicationContext.map().get(RegistrationConstants.USER_DTO);
 
 		if (RegistrationConstants.JOB_TRIGGER_POINT_USER.equals(requestHTTPDTO.getTriggerPoint())) {
-			if (loginUserDTO == null || loginUserDTO.getPassword() == null
-					|| isLoginModeOTP(loginUserDTO) || !SessionContext.isSessionContextAvailable()) {
+			if (loginUserDTO == null || loginUserDTO.getPassword() == null || isLoginModeOTP(loginUserDTO)
+					|| !SessionContext.isSessionContextAvailable()) {
 				haveToAuthZByClientId = true;
 				LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 						"Application context or Session Context with OTP ");
@@ -169,7 +183,7 @@ public class RestClientAuthAdvice {
 			serviceDelegateUtil.getAuthToken(LoginMode.CLIENTID, HAVE_TO_SAVE_AUTH_TOKEN);
 			authZToken = ApplicationContext.authTokenDTO().getCookie();
 			SessionContext.authTokenDTO().setCookie(authZToken);
-			
+
 			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 					"Application context or Session Context with OTP generated " + authZToken);
 		}
@@ -194,12 +208,14 @@ public class RestClientAuthAdvice {
 						"Session Context Auth token " + authZToken);
 			} else {
 				LoginUserDTO loginUserDTO = (LoginUserDTO) ApplicationContext.map().get(RegistrationConstants.USER_DTO);
-				if (loginUserDTO == null || loginUserDTO.getPassword() == null || !SessionContext.isSessionContextAvailable()) {
+				if (loginUserDTO == null || loginUserDTO.getPassword() == null
+						|| !SessionContext.isSessionContextAvailable()) {
 					haveToAuthZByClientId = true;
 					LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 							"Session Context null and user id and password are from applicaiton context ");
 				} else {
-					SessionContext.setAuthTokenDTO(serviceDelegateUtil.getAuthToken(LoginMode.PASSWORD, HAVE_TO_SAVE_AUTH_TOKEN));
+					SessionContext.setAuthTokenDTO(
+							serviceDelegateUtil.getAuthToken(LoginMode.PASSWORD, HAVE_TO_SAVE_AUTH_TOKEN));
 					authZToken = SessionContext.authTokenDTO().getCookie();
 					LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 							"Session Context with password Auth token " + authZToken);
@@ -211,7 +227,8 @@ public class RestClientAuthAdvice {
 		if ((haveToAuthZByClientId
 				|| RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM.equals(requestHTTPDTO.getTriggerPoint()))) {
 			if (null == ApplicationContext.authTokenDTO() || null == ApplicationContext.authTokenDTO().getCookie()) {
-				ApplicationContext.setAuthTokenDTO(serviceDelegateUtil.getAuthToken(LoginMode.CLIENTID, HAVE_TO_SAVE_AUTH_TOKEN));
+				ApplicationContext
+						.setAuthTokenDTO(serviceDelegateUtil.getAuthToken(LoginMode.CLIENTID, HAVE_TO_SAVE_AUTH_TOKEN));
 			}
 			authZToken = ApplicationContext.authTokenDTO().getCookie();
 			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
@@ -226,12 +243,9 @@ public class RestClientAuthAdvice {
 	/**
 	 * Setup of Auth Headers.
 	 *
-	 * @param httpHeaders
-	 *            http headers
-	 * @param authHeader
-	 *            auth header
-	 * @param authZCookie
-	 *            the Authorization Token or Cookie
+	 * @param httpHeaders http headers
+	 * @param authHeader  auth header
+	 * @param authZCookie the Authorization Token or Cookie
 	 */
 	private void setAuthHeaders(HttpHeaders httpHeaders, String authHeader, String authZCookie) {
 		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
@@ -255,23 +269,22 @@ public class RestClientAuthAdvice {
 	/**
 	 * Add request signature to the request header
 	 * 
-	 * @param httpHeaders
-	 *            the HTTP headers for the web-service request
-	 * @param requestBody
-	 *            the request body
-	 * @throws RegBaseCheckedException
-	 *             exception while generating request signature
+	 * @param httpHeaders the HTTP headers for the web-service request
+	 * @param requestBody the request body
+	 * @throws RegBaseCheckedException exception while generating request signature
 	 */
 	private void addRequestSignature(HttpHeaders httpHeaders, Object requestBody) throws RegBaseCheckedException {
 		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 				"Adding request signature to request header");
 
 		try {
-			httpHeaders.add("request-signature", String.format("Authorization:%s", CryptoUtil
-					.encodeBase64(ClientSecurityFacade.getClientSecurity().signData(JsonUtils.javaObjectToJsonString(requestBody).getBytes()))));
-			httpHeaders.add(RegistrationConstants.KEY_INDEX, CryptoUtil.encodeBase64String(String
-					.valueOf(machineMappingDAO.getKeyIndexByMachineName(RegistrationSystemPropertiesChecker.getMachineId()))
-					.getBytes()));
+			httpHeaders.add("request-signature", String.format("Authorization:%s", CryptoUtil.encodeBase64(
+					clientCryptoService.signData(JsonUtils.javaObjectToJsonString(requestBody).getBytes()))));
+			httpHeaders
+					.add(RegistrationConstants.KEY_INDEX,
+							CryptoUtil.encodeBase64String(String.valueOf(machineMappingDAO
+									.getKeyIndexByMachineName(RegistrationSystemPropertiesChecker.getMachineId()))
+									.getBytes()));
 		} catch (JsonProcessingException jsonProcessingException) {
 			throw new RegBaseCheckedException(RegistrationExceptionConstants.AUTHZ_ADDING_REQUEST_SIGN.getErrorCode(),
 					RegistrationExceptionConstants.AUTHZ_ADDING_REQUEST_SIGN.getErrorMessage(),
@@ -286,13 +299,12 @@ public class RestClientAuthAdvice {
 			throws RegBaseCheckedException {
 		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
 				"Entering into the invalid token check");
-		if (response != null && (StringUtils.containsIgnoreCase(response.toString(), TOKEN_EXPIRED) || 
-				StringUtils.containsIgnoreCase(response.toString(), INVALID_TOKEN_STRING))) {
+		if (response != null && (StringUtils.containsIgnoreCase(response.toString(), TOKEN_EXPIRED)
+				|| StringUtils.containsIgnoreCase(response.toString(), INVALID_TOKEN_STRING))) {
 			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-					"Old Token got expired for the token  " +  response);
+					"Old Token got expired for the token  " + response);
 			RequestHTTPDTO requestHTTPDTO = (RequestHTTPDTO) joinPoint.getArgs()[0];
-			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-					"Creating the new token ");
+			LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME, "Creating the new token ");
 			getNewAuthZToken(requestHTTPDTO);
 			return true;
 		}
@@ -300,16 +312,17 @@ public class RestClientAuthAdvice {
 				"Completed the invalid token check");
 		return false;
 	}
-	
+
 	private boolean isLoginModeOTP(LoginUserDTO loginUserDTO) {
 		LOGGER.info(LoggerConstants.AUTHZ_ADVICE, APPLICATION_ID, APPLICATION_NAME,
-				"Checking for the Session Context with OTP is available :: " + (SessionContext.isSessionContextAvailable() && 
-						loginUserDTO != null && loginUserDTO.getOtp() != null));
+				"Checking for the Session Context with OTP is available :: "
+						+ (SessionContext.isSessionContextAvailable() && loginUserDTO != null
+								&& loginUserDTO.getOtp() != null));
 		return SessionContext.isSessionContextAvailable() && loginUserDTO != null && loginUserDTO.getOtp() != null;
 	}
-	
+
 	private boolean cookieAvailable() {
-		return null != SessionContext.authTokenDTO().getCookie() && 
-				SessionContext.authTokenDTO().getCookie().trim().length() > 10;
+		return null != SessionContext.authTokenDTO().getCookie()
+				&& SessionContext.authTokenDTO().getCookie().trim().length() > 10;
 	}
 }

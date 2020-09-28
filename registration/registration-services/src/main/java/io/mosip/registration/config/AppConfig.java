@@ -56,7 +56,7 @@ import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderIm
 				"io.mosip.kernel.cryptosignature", "io.mosip.kernel.core.signatureutil",
 				"io.mosip.kernel.idobjectvalidator.impl", "io.mosip.kernel.packetmanager.impl",
 				"io.mosip.kernel.packetmanager.util", "io.mosip.kernel.biosdk.provider.impl",
-				"io.mosip.kernel.biosdk.provider.factory", "io.mosip.commons.packet" })
+				"io.mosip.kernel.biosdk.provider.factory", "io.mosip.commons.packet", "io.mosip.kernel.clientcrypto" })
 @PropertySource(value = { "classpath:spring.properties" })
 @ImportAutoConfiguration(RefreshAutoConfiguration.class)
 @EnableConfigurationProperties
@@ -105,8 +105,6 @@ public class AppConfig {
 //	public TemplateManagerBuilder getTemplateManagerBuilder() {
 //		return new TemplateManagerBuilderImpl();
 //	}
-
-
 
 	@Bean
 	public CacheManager cacheManager() {
