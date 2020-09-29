@@ -139,7 +139,8 @@ public class LoginServiceImpl extends BaseService implements LoginService {
 	@PostConstruct
 	public void init() {
 
-		clientCryptoFacade.setIsTPMRequired(true);
+		clientCryptoFacade
+				.setIsTPMRequired(RegistrationConstants.ENABLE.equalsIgnoreCase(ApplicationContext.getTPMUsageFlag()));
 		clientCryptoService = clientCryptoFacade.getClientSecurity();
 	}
 

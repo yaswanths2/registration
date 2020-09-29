@@ -36,6 +36,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import io.mosip.kernel.clientcrypto.service.impl.ClientCryptoFacade;
+import io.mosip.kernel.clientcrypto.service.spi.ClientCryptoService;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.dataaccess.hibernate.config.HibernateDaoConfig;
@@ -69,6 +70,8 @@ public class DaoConfig extends HibernateDaoConfig {
 	private static final String KEYS_DIR = ".mosipkeys";
 	private static final String DB_PWD_FILE = "db.conf";
 
+	private static ClientCryptoFacade clientCryptoFacade;
+	private static ClientCryptoService clientCryptoService;
 	static {
 		try (InputStream keyStream = DaoConfig.class.getClassLoader().getResourceAsStream("spring.properties")) {
 
@@ -76,7 +79,11 @@ public class DaoConfig extends HibernateDaoConfig {
 			keys.load(keyStream);
 
 			dataSource = setupDataSource();
+			clientCryptoFacade = new ClientCryptoFacade();
+			clientCryptoFacade.setIsTPMRequired(
+					RegistrationConstants.ENABLE.equalsIgnoreCase(ApplicationContext.getTPMUsageFlag()));
 
+			clientCryptoService = clientCryptoFacade.getClientSecurity();
 		} catch (Exception e) {
 			LOGGER.error(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID,
 					"Exception encountered during context initialization - DaoConfig "
@@ -291,8 +298,7 @@ public class DaoConfig extends HibernateDaoConfig {
 			LOGGER.debug(LOGGER_CLASS_NAME, APPLICATION_NAME, APPLICATION_ID, "****** DATASOURCE dbPath : " + dbPath);
 			Connection connection = null;
 			try {
-				connection = DriverManager.getConnection(
-						String.format(URL + ";create=true;", dbPath, getDBSecret()));
+				connection = DriverManager.getConnection(String.format(URL + ";create=true;", dbPath, getDBSecret()));
 
 				org.apache.derby.tools.ij.runScript(connection,
 						DaoConfig.class.getClassLoader().getResourceAsStream("initial.sql"), "UTF-8", System.out,
@@ -336,7 +342,8 @@ public class DaoConfig extends HibernateDaoConfig {
 			LOGGER.info("REGISTRATION  - SECURITY_FACADE", APPLICATION_NAME, APPLICATION_ID,
 					"getDBSecret invoked - DB_PWD_FILE not found !");
 			String newBootPassowrd = RandomStringUtils.random(20, true, true);
-			byte[] cipher = new ClientCryptoFacade().getClientSecurity().asymmetricEncrypt(newBootPassowrd.getBytes());
+
+			byte[] cipher = clientCryptoService.asymmetricEncrypt(newBootPassowrd.getBytes());
 
 			try (FileOutputStream fos = new FileOutputStream(dbConf)) {
 				fos.write(Base64.getEncoder().encode(cipher));
@@ -346,7 +353,6 @@ public class DaoConfig extends HibernateDaoConfig {
 		}
 
 		String key = new String(Files.readAllBytes(dbConf.toPath()));
-		return new String(
-				new ClientCryptoFacade().getClientSecurity().asymmetricDecrypt(Base64.getDecoder().decode(key)));
+		return new String(clientCryptoService.asymmetricDecrypt(Base64.getDecoder().decode(key)));
 	}
 }

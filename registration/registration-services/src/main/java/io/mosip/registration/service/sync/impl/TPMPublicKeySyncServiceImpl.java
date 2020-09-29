@@ -55,7 +55,8 @@ public class TPMPublicKeySyncServiceImpl implements TPMPublicKeySyncService {
 	@PostConstruct
 	public void init() {
 
-		clientCryptoFacade.setIsTPMRequired(true);
+		clientCryptoFacade
+				.setIsTPMRequired(RegistrationConstants.ENABLE.equalsIgnoreCase(ApplicationContext.getTPMUsageFlag()));
 		clientCryptoService = clientCryptoFacade.getClientSecurity();
 	}
 
