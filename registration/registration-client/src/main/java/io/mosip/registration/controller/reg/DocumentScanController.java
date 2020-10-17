@@ -163,7 +163,7 @@ public class DocumentScanController extends BaseController {
 
 	@Autowired
 	private WebcamSarxosServiceImpl webcamSarxosServiceImpl;
-	
+
 	private String selectedScanDeviceName;
 
 	private Webcam webcam;
@@ -335,11 +335,11 @@ public class DocumentScanController extends BaseController {
 					scannerComboBox.getSelectionModel().selectFirst();
 					selectedScanDeviceName = scannerComboBox.getSelectionModel().getSelectedItem();
 				}
-			}			
+			}
 			scannerHbox.getChildren().addAll(selectScannerLabel, scannerComboBox);
 			docScanVbox.getChildren().add(scannerHbox);
 		}
-		
+
 		/* show the scan doc info label for format and size */
 		Label fileSizeInfoLabel = new Label();
 		fileSizeInfoLabel.setWrapText(true);
@@ -673,24 +673,50 @@ public class DocumentScanController extends BaseController {
 	 */
 	private void scanFromScanner() throws IOException {
 
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Scanning from scanner");
+
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Setting scanner factory");
+
 		/* setting the scanner factory */
 		if (!documentScanFacade.setScannerFactory()) {
+			LOGGER.error(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "Setting scanner factory failed");
+
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOCUMENT_CONNECTION_ERR);
 			return;
 		}
 		if (selectedScanDeviceName == null || selectedScanDeviceName.isEmpty()) {
+			LOGGER.error(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "Selected device name was empty");
+
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOCUMENT_CONNECTION_ERR);
 			return;
 		}
+
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Setting scan message name visible");
 
 		scanPopUpViewController.getScanningMsg().setVisible(true);
 
 		byte[] byteArray;
 		BufferedImage bufferedImage;
 
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "checking for POE value ");
+
 		if (selectedComboBox.getValue().getCode()
 				.equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.POE_DOCUMENT_VALUE))) {
+
+			LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "capturing POE document using native library webcam");
+
 			bufferedImage = webcamSarxosServiceImpl.captureImage(webcam);
+
+			LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "closing web cam");
+
 			webcamSarxosServiceImpl.close(webcam);
 			scanPopUpViewController.setDefaultImageGridPaneVisibility();
 		} else {
@@ -698,15 +724,26 @@ public class DocumentScanController extends BaseController {
 		}
 
 		if (bufferedImage == null) {
+			LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+					RegistrationConstants.APPLICATION_ID, "captured buffered image was null");
+
 			generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.SCAN_DOCUMENT_ERROR);
 			return;
 		}
 		if (scannedPages == null) {
+
 			scannedPages = new ArrayList<>();
 		}
 		scannedPages.add(bufferedImage);
 
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "converting image bytes from buffered image");
+
 		byteArray = documentScanFacade.getImageBytesFromBufferedImage(bufferedImage);
+
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "converting image bytes from buffered image completed");
+
 		/* show the scanned page in the preview */
 		scanPopUpViewController.getScanImage().setImage(convertBytesToImage(byteArray));
 
@@ -784,13 +821,21 @@ public class DocumentScanController extends BaseController {
 		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Set details to DocumentDetailsDTO");
 
-		LOGGER.info(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Set DocumentDetailsDTO to RegistrationDTO");
 		addDocumentsToScreen(documentDto.getValue(), documentDto.getFormat(), vboxElement);
+
+		selectedComboBox.getValue().setScanned(true);
+
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Validating document screen");
 
 		validateDocumentsPane();
 
 		generateAlert(RegistrationConstants.ALERT_INFORMATION, RegistrationUIConstants.SCAN_DOC_SUCCESS);
+
+		LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Adding document to session");
 
 		getRegistrationDTOFromSession().addDocument(selectedComboBox.getId(), documentDto);
 	}
@@ -909,10 +954,8 @@ public class DocumentScanController extends BaseController {
 	/**
 	 * This method will set the inde and page number for the document
 	 * 
-	 * @param index
-	 *            - index of the preview section
-	 * @param pageNumber
-	 *            - page number for the preview section
+	 * @param index      - index of the preview section
+	 * @param pageNumber - page number for the preview section
 	 */
 	private void setDocPreview(int index, int pageNumber) {
 		docPreviewImgView.setImage(SwingFXUtils.toFXImage(docPages.get(index), null));
@@ -922,8 +965,7 @@ public class DocumentScanController extends BaseController {
 	/**
 	 * This method will create Image to delete scanned document
 	 * 
-	 * @param field
-	 *            the {@link VBox}
+	 * @param field the {@link VBox}
 	 */
 	private ImageView createImageView(VBox vboxElement) {
 
@@ -981,8 +1023,7 @@ public class DocumentScanController extends BaseController {
 	/**
 	 * This method will create Hyperlink to view scanned document
 	 * 
-	 * @param field
-	 *            the {@link String}
+	 * @param field the {@link String}
 	 */
 	private Hyperlink createHyperLink(String document) {
 
@@ -1161,9 +1202,10 @@ public class DocumentScanController extends BaseController {
 	 * exception required. While for Individual, text will be displayed as Biometric
 	 * exception required.
 	 * 
-	 * @param isParentOrGuardianBiometricsCaptured
-	 *            boolean value indicating whose biometric exception has to be
-	 *            captured either individual or parent/ guardian
+	 * @param isParentOrGuardianBiometricsCaptured boolean value indicating whose
+	 *                                             biometric exception has to be
+	 *                                             captured either individual or
+	 *                                             parent/ guardian
 	 */
 	public void setExceptionDescriptionText(boolean isParentOrGuardianBiometricsCaptured) {
 		ResourceBundle applicationLanguage = ApplicationContext.applicationLanguageBundle();
@@ -1189,11 +1231,9 @@ public class DocumentScanController extends BaseController {
 	/**
 	 * This method converts the BufferedImage to byte[]
 	 * 
-	 * @param bufferedImage
-	 *            - holds the scanned image from the scanner
+	 * @param bufferedImage - holds the scanned image from the scanner
 	 * @return byte[] - scanned document Content
-	 * @throws IOException
-	 *             - holds the IOExcepion
+	 * @throws IOException - holds the IOExcepion
 	 */
 	private byte[] getImageBytesFromBufferedImage(BufferedImage bufferedImage) throws IOException {
 		byte[] imageInByte;
