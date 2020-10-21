@@ -12,6 +12,7 @@ import io.mosip.registration.processor.core.code.ApiName;
 import io.mosip.registration.processor.core.constant.EventId;
 import io.mosip.registration.processor.core.constant.EventName;
 import io.mosip.registration.processor.core.constant.EventType;
+import io.mosip.registration.processor.core.constant.IdType;
 import io.mosip.registration.processor.core.constant.JsonConstant;
 import io.mosip.registration.processor.core.constant.RegistrationType;
 import io.mosip.registration.processor.core.exception.ApisResourceAccessException;
@@ -28,7 +29,7 @@ import io.mosip.registration.processor.core.spi.queue.MosipQueueConnectionFactor
 import io.mosip.registration.processor.core.spi.queue.MosipQueueManager;
 import io.mosip.registration.processor.core.spi.restclient.RegistrationProcessorRestClientService;
 import io.mosip.registration.processor.packet.storage.dto.ApplicantInfoDto;
-import io.mosip.registration.processor.packet.storage.exception.PacketManagerException;
+import io.mosip.registration.processor.core.exception.PacketManagerException;
 import io.mosip.registration.processor.packet.storage.utils.PacketManagerService;
 import io.mosip.registration.processor.packet.storage.utils.Utilities;
 import io.mosip.registration.processor.print.exception.QueueConnectionNotFound;
@@ -87,7 +88,6 @@ import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyByte;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -97,7 +97,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("deprecation")
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ Utilities.class })
-@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*","javax.management.*", "javax.net.*" })
+@PowerMockIgnore({ "com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "javax.management.*", "javax.net.*" })
 @PropertySource("classpath:bootstrap.properties")
 public class PrintStageTest {
 
@@ -205,7 +205,10 @@ public class PrintStageTest {
 		ReflectionTestUtils.setField(stage, "contextPath", "/registrationprocessor/v1/print-stage");
 		// Mockito.when(env.getProperty(SwaggerConstant.SERVER_SERVLET_PATH))
 		// .thenReturn("/registrationprocessor/v1/packetreceiver");
-		Mockito.when(registrationStatusService.getRegistrationStatus(any(String.class))).thenReturn(registrationStatusDto);
+		Mockito.when(registrationStatusService.getRegistrationStatus(any(String.class)))
+				.thenReturn(registrationStatusDto);
+		Mockito.when(utilities.getUIn(any(), any(), any())).thenReturn("1234567890");
+		Mockito.when(utilities.linkRegIdWrtUin(anyString(), anyString())).thenReturn(true);
 
 		byte[] pdfbytes = "UIN Card Template pdf".getBytes();
 		byte[] textBytes = "Text File ".getBytes();
@@ -214,8 +217,7 @@ public class PrintStageTest {
 		byteMap.put("textFile", textBytes);
 		Mockito.when(printService.getDocuments(any(), any(), any(), anyBoolean())).thenReturn(byteMap);
 
-		Mockito.when(mosipConnectionFactory.createConnection(any(), any(), any(), any()))
-				.thenReturn(queue);
+		Mockito.when(mosipConnectionFactory.createConnection(any(), any(), any(), any())).thenReturn(queue);
 		Mockito.when(mosipQueueManager.send(any(), any(byte[].class), any())).thenReturn(true);
 
 		Mockito.doNothing().when(registrationStatusDto).setStatusCode(any());
@@ -254,7 +256,8 @@ public class PrintStageTest {
 		Mockito.when(utilities.retrieveUIN(any())).thenReturn(obj1);
 
 		Mockito.when(utilities.getDefaultSource()).thenReturn("reg-client");
-		Mockito.when(packetManagerService.getMetaInfo(anyString(),anyString(),anyString())).thenReturn(new HashMap<>());
+		Mockito.when(packetManagerService.getMetaInfo(anyString(), anyString(), anyString()))
+				.thenReturn(new HashMap<>());
 	}
 
 	@Test
@@ -307,8 +310,7 @@ public class PrintStageTest {
 
 	@Test(expected = QueueConnectionNotFound.class)
 	public void testDeployVerticleForException() {
-		Mockito.when(mosipConnectionFactory.createConnection(any(), any(), any(), any()))
-				.thenReturn(null);
+		Mockito.when(mosipConnectionFactory.createConnection(any(), any(), any(), any())).thenReturn(null);
 		stage.deployVerticle();
 	}
 
@@ -324,43 +326,43 @@ public class PrintStageTest {
 		MessageDTO result = stage.process(dto);
 		assertTrue(result.getIsValid());
 	}
-	
+
 	@Test
 	public void testconsumerListenerSuccess() throws JMSException {
-		registrationStatusDto=new InternalRegistrationStatusDto();
+		registrationStatusDto = new InternalRegistrationStatusDto();
 		registrationStatusDto.setRegistrationId("123456789");
 		ActiveMQBytesMessage message = new ActiveMQBytesMessage();
-		String mes="{\"Status\":\"Success\",\"RegId\":\"123456789\"}";
-		ByteSequence byt=new ByteSequence(mes.getBytes());
+		String mes = "{\"Status\":\"Success\",\"RegId\":\"123456789\"}";
+		ByteSequence byt = new ByteSequence(mes.getBytes());
 		message.setContent(byt);
 		when(registrationStatusService.getRegistrationStatus(any())).thenReturn(registrationStatusDto);
 		doNothing().when(registrationStatusService).updateRegistrationStatus(any(), any(), any());
-		stage.consumerListener( message); 
+		stage.consumerListener(message);
 	}
-	
+
 	@Test
 	public void testconsumerListenerResend() throws JMSException {
-		registrationStatusDto=new InternalRegistrationStatusDto();
+		registrationStatusDto = new InternalRegistrationStatusDto();
 		registrationStatusDto.setRegistrationId("123456789");
 		registrationStatusDto.setRegistrationType("NEW");
 		ActiveMQBytesMessage message = new ActiveMQBytesMessage();
-		String mes="{\"Status\":\"Resend\",\"RegId\":\"123456789\"}";
-		ByteSequence byt=new ByteSequence(mes.getBytes());
+		String mes = "{\"Status\":\"Resend\",\"RegId\":\"123456789\"}";
+		ByteSequence byt = new ByteSequence(mes.getBytes());
 		message.setContent(byt);
 		when(registrationStatusService.getRegistrationStatus(any())).thenReturn(registrationStatusDto);
 		doNothing().when(registrationStatusService).updateRegistrationStatus(any(), any(), any());
-		stage.consumerListener( message); 
+		stage.consumerListener(message);
 	}
-	
+
 	@Test
 	public void testconsumerListenerNullRegId() throws JMSException {
-		
+
 		ActiveMQBytesMessage message = new ActiveMQBytesMessage();
-		String mes="{\"Status\":\"Resend\",\"RegId\":null}";
-		ByteSequence byt=new ByteSequence(mes.getBytes());
+		String mes = "{\"Status\":\"Resend\",\"RegId\":null}";
+		ByteSequence byt = new ByteSequence(mes.getBytes());
 		message.setContent(byt);
-		
-		stage.consumerListener( message); 
+
+		stage.consumerListener(message);
 	}
 
 	@Test
@@ -445,18 +447,23 @@ public class PrintStageTest {
 	}
 
 	@Test
-	public void testException() throws ApisResourceAccessException {
+	public void testException() {
 		NullPointerException e = new NullPointerException();
-		Mockito.doThrow(e).when(registrationStatusService).getRegistrationStatus(anyString());
+		Mockito.doThrow(e).when(utilities).getDefaultSource();
 
 		MessageDTO dto = new MessageDTO();
 		dto.setRid("1234567890987654321");
 		dto.setReg_type(RegistrationType.NEW);
 		List<String> uinList = new ArrayList<>();
 		uinList.add("3051738163");
-		// Mockito.when(packetInfoManager.getUINByRid("1234567890987654321")).thenReturn(uinList);
+		registrationStatusDto = new InternalRegistrationStatusDto();
+		registrationStatusDto.setRegistrationId("123456789");
+
+		when(registrationStatusService.getRegistrationStatus(any())).thenReturn(registrationStatusDto);
 		doNothing().when(printPostService).generatePrintandPostal(any(), any(), any());
+
 		MessageDTO result = stage.process(dto);
+
 		assertTrue(result.getInternalError());
 	}
 
@@ -710,8 +717,8 @@ public class PrintStageTest {
 	}
 
 	@Test
-	public void testPrintStageSuccessForRes_Reprint() throws ApisResourceAccessException,
-			IOException, JsonProcessingException, PacketManagerException {
+	public void testPrintStageSuccessForRes_Reprint()
+			throws ApisResourceAccessException, IOException, JsonProcessingException, PacketManagerException {
 		FieldValue fieldValue = new FieldValue();
 		FieldValue fieldValue1 = new FieldValue();
 		fieldValue1.setLabel("vid");
@@ -721,7 +728,14 @@ public class PrintStageTest {
 		Map<String, String> metaInfoMap = new HashMap<>();
 		String metaString = "[{\"vid\":\"1234\",\"cardType\":\"MASKED_UIN\"}]";
 		metaInfoMap.put(JsonConstant.METADATA, metaString);
-		Mockito.when(packetManagerService.getMetaInfo(any(),any(),any())).thenReturn(metaInfoMap);
+		registrationStatusDto = new InternalRegistrationStatusDto();
+		registrationStatusDto.setRegistrationId("123456789");
+		registrationStatusDto.setRegistrationType(RegistrationType.RES_REPRINT.name());
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put(IdType.UIN.toString(), "12345");
+
+		when(registrationStatusService.getRegistrationStatus(any())).thenReturn(registrationStatusDto);
+		Mockito.when(packetManagerService.getMetaInfo(any(), any(), any())).thenReturn(metaInfoMap);
 		Mockito.when(objectMapper.readValue(anyString(), any(Class.class))).thenReturn(fieldValue);
 
 		MessageDTO dto = new MessageDTO();
@@ -736,7 +750,8 @@ public class PrintStageTest {
 	}
 
 	@Test
-	public void testPrintStageSuccessForRes_ReprintUIN() throws ApisResourceAccessException, IOException, PacketManagerException, JsonProcessingException {
+	public void testPrintStageSuccessForRes_ReprintUIN()
+			throws ApisResourceAccessException, IOException, PacketManagerException, JsonProcessingException {
 		FieldValue fieldValue = new FieldValue();
 		FieldValue fieldValue1 = new FieldValue();
 		fieldValue1.setLabel("vid");
@@ -746,7 +761,7 @@ public class PrintStageTest {
 		Map<String, String> metaInfoMap = new HashMap<>();
 		String metaString = "[{\"vid\":\"1234\",\"cardType\":\"uin\"}]";
 		metaInfoMap.put(JsonConstant.METADATA, metaString);
-		Mockito.when(packetManagerService.getMetaInfo(any(),any(),any())).thenReturn(metaInfoMap);
+		Mockito.when(packetManagerService.getMetaInfo(any(), any(), any())).thenReturn(metaInfoMap);
 		Mockito.when(objectMapper.readValue(anyString(), any(Class.class))).thenReturn(fieldValue);
 
 		MessageDTO dto = new MessageDTO();
@@ -758,6 +773,7 @@ public class PrintStageTest {
 		MessageDTO result = stage.process(dto);
 		assertTrue(result.getIsValid());
 	}
+
 	@Test
 	public void testPDFSignatureException() {
 
