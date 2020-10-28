@@ -1688,6 +1688,16 @@ public class DemographicDetailController extends BaseController {
 			}
 
 			// TODO same for local lang tooo
+			Node localLangNode = getFxElement(field.getId() + RegistrationConstants.LOCAL_LANGUAGE);
+
+			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+					"Updating visibility for field : " + field.getId() + RegistrationConstants.LOCAL_LANGUAGE
+							+ " as visibility : " + isVisible);
+
+			if (localLangNode != null) {
+				localLangNode.setVisible(isVisible);
+				localLangNode.setManaged(isVisible);
+			}
 		}
 	}
 
