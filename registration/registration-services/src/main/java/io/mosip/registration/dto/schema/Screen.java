@@ -14,15 +14,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Screen {
-	
+
 	private String name;
 	private List<String> title;
 	private int order;
-	
+
 	@JsonProperty("css-class")
 	private String cssClass;
-	
-	private String visible;
+
+	private boolean visible;
 	private boolean enabled;
 	private String layout;
 	private List<Group> groups;

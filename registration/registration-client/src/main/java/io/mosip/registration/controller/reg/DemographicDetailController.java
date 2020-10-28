@@ -1,11 +1,12 @@
 package io.mosip.registration.controller.reg;
 
+import static io.mosip.registration.constants.LoggerConstants.LOG_REG_BIOMETRIC_CONTROLLER;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
+import java.awt.Checkbox;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -22,6 +23,9 @@ import java.util.stream.Collectors;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.joda.time.PeriodType;
+import org.mvel2.MVEL;
+import org.mvel2.integration.VariableResolverFactory;
+import org.mvel2.integration.impl.MapVariableResolverFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Controller;
@@ -52,9 +56,13 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
 import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Validator;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.LocationDto;
-import io.mosip.registration.dto.packetmanager.BiometricsDto;
+import io.mosip.registration.dto.schema.Field;
+import io.mosip.registration.dto.schema.Group;
+import io.mosip.registration.dto.schema.SchemaDTO;
+import io.mosip.registration.dto.schema.Screen;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
@@ -98,6 +106,8 @@ public class DemographicDetailController extends BaseController {
 	 * Instance of {@link Logger}
 	 */
 	private static final Logger LOGGER = AppConfig.getLogger(DemographicDetailController.class);
+
+	private String loggerClassName = "DemographicDetailController";
 
 	@FXML
 	public TextField preRegistrationId;
@@ -582,6 +592,8 @@ public class DemographicDetailController extends BaseController {
 
 	@Autowired
 	ResourceLoader resourceLoader;
+
+	private String currentScreenName;
 
 	public VBox addContentWithTextField(UiSchemaDTO schema, String fieldName, String languageType) {
 		TextField field = new TextField();
@@ -1143,6 +1155,7 @@ public class DemographicDetailController extends BaseController {
 
 	private void addTextFieldToSession(String id, RegistrationDTO registrationDTO, boolean isDefaultField) {
 
+		// TODO directly get field
 		Node node = getFxElement(id);
 		if (node != null && node instanceof TextField) {
 			TextField platformField = (TextField) node;
@@ -1570,5 +1583,160 @@ public class DemographicDetailController extends BaseController {
 
 	private Node getFxElement(String fieldId) {
 		return parentFlowPane.lookup(RegistrationConstants.HASH + fieldId);
+	}
+
+	private void setTextFieldListener(TextField textField) {
+		textField.textProperty().addListener((observable, oldValue, newValue) -> {
+
+			// Validate Text Field
+			if (isInputTextValid(textField)) {
+
+				// Set Local lang
+				setSecondaryLangText(textField,
+						(TextField) getFxElement(textField + RegistrationConstants.LOCAL_LANGUAGE), true);
+
+//				 Save information to session
+				addTextFieldToSession(textField.getId(), getRegistrationDTOFromSession(), false);
+
+				// Group level visibility listeners
+				refreshDemographicGroups(getScreen(currentScreenName));
+
+				// TODO update required on fields also
+			} else {
+				// TODO If Validation failure
+				// TODO show error message for current field for both app and local lang
+			}
+		});
+	}
+
+	private void refreshDemographicGroups(Screen screen) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Refreshing demographic groups");
+
+		if (screen != null) {
+			// Fetch list of groups using screens
+			List<Group> groups = screen.getGroups();
+
+			for (Group group : groups) {
+
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Fetching visible validator for group : " + group.getName());
+
+				Validator validator = group.getVisible();
+
+				if (validator.getType().equalsIgnoreCase("MVEL")) {
+					@SuppressWarnings("rawtypes")
+					Map context = new HashMap();
+					context.put("identity", getRegistrationDTOFromSession().getMVELDataContext());
+					VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
+					boolean required = MVEL.evalToBoolean(validator.getValidator(), resolverFactory);
+
+					updateFields(group.getFields(), required);
+				}
+
+				// TODO Required On
+
+			}
+		}
+	}
+
+	private Screen getScreen(String currentScreenName) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Fetching current screen");
+
+		Screen currentScreen = null;
+
+		// TODO fetch schema dto
+		SchemaDTO schemaDTO = null;
+
+		// Fetch all screens
+		List<Screen> screens = schemaDTO.getScreens();
+
+		for (Screen screen : screens) {
+			if (screen.getName().equalsIgnoreCase(currentScreenName)) {
+
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Found screen : " + currentScreenName);
+
+				currentScreen = screen;
+
+				break;
+			}
+		}
+		return currentScreen;
+	}
+
+	private void updateFields(List<Field> fields, boolean isVisible) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, "Updating fields");
+
+		for (Field field : fields) {
+
+			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+					"Updating field : " + field.getId());
+
+			Node node = getFxElement(field.getId());
+
+			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+					"Updating visibility for field : " + field.getId() + " as visibility : " + isVisible);
+
+			if (node != null) {
+				node.setVisible(isVisible);
+				node.setManaged(isVisible);
+			}
+
+			// TODO same for local lang tooo
+		}
+	}
+
+	private void setComboBoxListener(ComboBox<GenericDto> comboBox) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Setting listener for comboBox " + comboBox.getId());
+
+	}
+
+	private void setCheckBoxListener(Checkbox checkBox) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Setting listener for checkBox ");
+
+	}
+
+	private boolean isInputTextValid(TextField primaryLangTextField) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Validating text field " + primaryLangTextField.getId());
+		return validation.validateTextField(parentFlowPane, primaryLangTextField,
+				primaryLangTextField.getId() + "_ontype", true);
+	}
+
+	private void setSecondaryLangText(TextField primaryField, TextField secondaryField, boolean haveToTransliterate) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Setting secondary language for field : " + primaryField.getId());
+		if (secondaryField != null) {
+			if (haveToTransliterate) {
+				try {
+					secondaryField.setText(transliteration.transliterate(ApplicationContext.applicationLanguage(),
+							ApplicationContext.localLanguage(), primaryField.getText()));
+				} catch (RuntimeException runtimeException) {
+					LOGGER.error(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+							runtimeException.getMessage());
+
+					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+							"Exception occured while transliterating secondary language for field : "
+									+ primaryField.getId());
+					secondaryField.setText(primaryField.getText());
+				}
+			} else {
+
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Not transliteration into local language" + primaryField.getId());
+				secondaryField.setText(primaryField.getText());
+			}
+		}
 	}
 }
