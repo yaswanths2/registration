@@ -1142,21 +1142,30 @@ public class DemographicDetailController extends BaseController {
 	}
 
 	private void addTextFieldToSession(String id, RegistrationDTO registrationDTO, boolean isDefaultField) {
-		TextField platformField = listOfTextField.get(id);
-		TextField localField = listOfTextField.get(id + RegistrationConstants.LOCAL_LANGUAGE);
-		if (!isDefaultField) {
-			registrationDTO.addDemographicField(id, applicationContext.getApplicationLanguage(),
-					platformField.getText(), applicationContext.getLocalLanguage(),
-					localField == null ? null : localField.getText());
-		} else {
-			registrationDTO.addDefaultDemographicField(id, applicationContext.getApplicationLanguage(),
-					platformField.getText(), applicationContext.getLocalLanguage(),
-					localField == null ? null : localField.getText());
+
+		Node node = getFxElement(id);
+		if (node != null && node instanceof TextField) {
+			TextField platformField = (TextField) node;
+
+			Node localNode = getFxElement(id + RegistrationConstants.LOCAL_LANGUAGE);
+			TextField localField = null;
+			if (localNode != null) {
+				localField = (TextField) localNode;
+			}
+			if (!isDefaultField) {
+				registrationDTO.addDemographicField(id, applicationContext.getApplicationLanguage(),
+						platformField.getText(), applicationContext.getLocalLanguage(),
+						localField == null ? null : localField.getText());
+			} else {
+				registrationDTO.addDefaultDemographicField(id, applicationContext.getApplicationLanguage(),
+						platformField.getText(), applicationContext.getLocalLanguage(),
+						localField == null ? null : localField.getText());
+			}
 		}
 	}
 
 	private String getLocalFieldButtonText(Button button, List<Button> localFieldButtons) {
-		if(!isLocalLanguageAvailable() || isAppLangAndLocalLangSame()) {
+		if (!isLocalLanguageAvailable() || isAppLangAndLocalLangSame()) {
 			return null;
 		}
 		String buttonText = null;
@@ -1559,4 +1568,7 @@ public class DemographicDetailController extends BaseController {
 	 * { updatePageFlow(pageId, true); } }
 	 */
 
+	private Node getFxElement(String fieldId) {
+		return parentFlowPane.lookup(RegistrationConstants.HASH + fieldId);
+	}
 }
