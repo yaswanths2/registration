@@ -190,6 +190,8 @@ public class DemographicDetailController extends BaseController {
 
 	private Map<String, List<String>> orderOfAddressListByGroup = new LinkedHashMap<>();
 
+	private Map<String, GridPane> demoGraphicScreenGridPaneMap = new LinkedHashMap<String, GridPane>();
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -1668,11 +1670,11 @@ public class DemographicDetailController extends BaseController {
 		return currentScreen;
 	}
 
-	private void updateFields(List<Field> fields, boolean isVisible) {
+	private void updateFields(List<UiSchemaDTO> fields, boolean isVisible) {
 
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, "Updating fields");
 
-		for (Field field : fields) {
+		for (UiSchemaDTO field : fields) {
 
 			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					"Updating field : " + field.getId());
@@ -1749,17 +1751,16 @@ public class DemographicDetailController extends BaseController {
 			}
 		}
 	}
-	
-	
+
 	@SuppressWarnings("unused")
 	private boolean checkSchemaWithFXML(SchemaDTO schemaDTO) {
-		//TODO - get schemaDTO
+		// TODO - get schemaDTO
 		List<Screen> screens = schemaDTO.getScreens();
 		for (Screen screen : screens) {
 			List<Group> groups = screen.getGroups();
 			for (Group group : groups) {
-				List<Field> fields = group.getFields();
-				for (Field field : fields) {
+				List<UiSchemaDTO> fields = group.getFields();
+				for (UiSchemaDTO field : fields) {
 					String id = field.getId();
 					if (isDemographicField(field) && getFxElement(id) == null) {
 						return false;
@@ -1767,14 +1768,232 @@ public class DemographicDetailController extends BaseController {
 				}
 			}
 		}
-		
+
 		return true;
 	}
 
 	private boolean isDemographicField(Field field) {
-		return (field.isInputRequired()
-				&& !(PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
-						|| PacketManagerConstants.DOCUMENTS_DATATYPE.equals(field.getType())));
+		return (field.isInputRequired() && !(PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
+				|| PacketManagerConstants.DOCUMENTS_DATATYPE.equals(field.getType())));
 	}
 
+	private void initializeDemoScreens() {
+
+		demoGraphicScreenGridPaneMap.clear();
+
+		List<Screen> screens = getDemoScreens();
+
+		if (screens != null && !screens.isEmpty()) {
+
+			for (Screen screen : screens) {
+
+				createSceneGridPane(screen);
+			}
+		}
+
+	}
+
+	private void createSceneGridPane(Screen screen) {
+		GridPane sceneGridPane = new GridPane();
+
+		sceneGridPane.setId(screen.getName());
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Added screen gridPane to map : " + sceneGridPane.getId());
+
+		addScreenGridPaneToMap(sceneGridPane);
+
+		List<Group> groups = screen.getGroups();
+
+		if (groups != null && !groups.isEmpty()) {
+
+			for (Group group : groups) {
+
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Creating group gridPane : " + group.getName());
+
+				createGroupGridPane(group, sceneGridPane);
+			}
+		}
+	}
+
+	private void createGroupGridPane(Group group, GridPane screenGridPane) {
+
+		if (group != null && group.getFields() != null) {
+
+			GridPane groupGridPane = new GridPane();
+
+			groupGridPane.setId(group.getName());
+			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+					"Added group gridPane to screenGridPane : " + group.getName());
+
+			screenGridPane.getChildren().add(groupGridPane);
+
+			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+					"Creating group layout : " + group.getName());
+			createGroupLayout(group, groupGridPane);
+
+		}
+
+	}
+
+	private void createGroupLayout(Group group, GridPane groupGridPane) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Creating group layout : " + group.getName());
+
+		if (group != null) {
+
+			addGroupContent(group.getFields(), group, groupGridPane);
+		}
+
+	}
+
+	private void addScreenGridPaneToMap(GridPane screenGridPane) {
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Adding screen grid pane : " + screenGridPane.getId());
+
+		demoGraphicScreenGridPaneMap.put(screenGridPane.getId(), screenGridPane);
+
+	}
+
+	private List<Screen> getDemoScreens() {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Get Demographic screens from UI schema");
+
+		// TODO get UiSchemaDTO
+		List<Screen> screens = null;
+
+		return null;
+	}
+
+	private void addGroupContent(List<UiSchemaDTO> uiSchemaDTOs, Group group, GridPane groupGridPane) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, "Adding group contents");
+
+		GridPane horizontalRowGridPane = null;
+		if (uiSchemaDTOs != null && !uiSchemaDTOs.isEmpty()) {
+
+			if (group.getLayout().equalsIgnoreCase(RegistrationConstants.HORIZONTAL_LAYOUT)) {
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Requesting prepare grid pane for horizontal layout");
+
+				horizontalRowGridPane = prepareRowGridPane(uiSchemaDTOs.size());
+			}
+
+			for (int index = 0; index < uiSchemaDTOs.size(); index++) {
+
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Adding ui schema of application language");
+
+				GridPane applicationLanguageGridPane = subGridPane(uiSchemaDTOs.get(index), "");
+
+				applicationLanguageGridPane.setId(uiSchemaDTOs.get(index).getId());
+
+				GridPane rowGridPane = horizontalRowGridPane == null ? prepareRowGridPane(1) : horizontalRowGridPane;
+
+				rowGridPane.addColumn(horizontalRowGridPane == null ? 0 : index, applicationLanguageGridPane);
+				if (isLocalLanguageAvailable() && !isAppLangAndLocalLangSame()) {
+
+					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+							"Adding ui schema of local language");
+
+					GridPane localLanguageGridPane = subGridPane(uiSchemaDTOs.get(index),
+							RegistrationConstants.LOCAL_LANGUAGE);
+
+					if (localLanguageGridPane != null) {
+
+						localLanguageGridPane
+								.setId(uiSchemaDTOs.get(index).getId() + RegistrationConstants.LOCAL_LANGUAGE);
+
+						rowGridPane.addColumn(horizontalRowGridPane == null ? 2 : uiSchemaDTOs.size() + index,
+								localLanguageGridPane);
+					}
+				}
+
+				if (horizontalRowGridPane == null) {
+					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+							"Setting vertical row gridpane for : " + uiSchemaDTOs.get(index).getId());
+					groupGridPane.getChildren().add(rowGridPane);
+				}
+
+			}
+
+		}
+
+		if (horizontalRowGridPane != null) {
+			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+					"Setting horizontal row gridpane for group : " + group.getName());
+			groupGridPane.getChildren().add(horizontalRowGridPane);
+		}
+	}
+
+	private GridPane prepareRowGridPane(int noOfItems) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Preparing grid pane for items : " + noOfItems);
+		GridPane gridPane = new GridPane();
+		gridPane.setPrefWidth(1000);
+
+		ObservableList<ColumnConstraints> columnConstraints = gridPane.getColumnConstraints();
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Preparing grid pane for items : " + noOfItems + " left hand side");
+		// Left Hand Side
+		setColumnConstraints(columnConstraints, 50, noOfItems);
+
+//		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
+//				RegistrationConstants.APPLICATION_ID, "Preparing grid pane space in middle");
+//		// Middle Space
+//		setColumnConstraints(columnConstraints, 2, 1);
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Preparing grid pane for items : " + noOfItems + " right hand side");
+		// Right Hand Side
+		setColumnConstraints(columnConstraints, 50, noOfItems);
+
+		return gridPane;
+	}
+
+	private void setColumnConstraints(ObservableList<ColumnConstraints> columnConstraints, int currentPaneWidth,
+			int noOfItems) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Setting column constraints");
+
+		if (columnConstraints != null) {
+			for (int index = 1; index <= noOfItems; ++index) {
+
+				ColumnConstraints columnConstraint = new ColumnConstraints();
+				columnConstraint.setPercentWidth(currentPaneWidth / noOfItems);
+				columnConstraints.add(columnConstraint);
+
+			}
+		}
+	}
+
+	public void show(String screenName) {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"showing screen : " + screenName);
+		if (screenName != null && demoGraphicScreenGridPaneMap.containsKey(screenName)) {
+
+			for (Entry<String, GridPane> entry : demoGraphicScreenGridPaneMap.entrySet()) {
+
+				if (screenName.equalsIgnoreCase(entry.getKey())) {
+					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+							"enabling screen : " + entry.getKey());
+					entry.getValue().setVisible(true);
+					entry.getValue().setManaged(true);
+
+				} else {
+					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+							"disabling screen : " + entry.getKey());
+					entry.getValue().setVisible(false);
+					entry.getValue().setManaged(false);
+				}
+			}
+		}
+
+	}
 }

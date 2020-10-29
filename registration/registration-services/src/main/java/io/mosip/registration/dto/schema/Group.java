@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.Validator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,6 +26,6 @@ public class Group {
 	private Validator visible;
 	private boolean enabled;
 	private int order;
-	private List<Field> fields;
+	private List<UiSchemaDTO> fields;
 
 }

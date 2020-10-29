@@ -1800,7 +1800,13 @@ public class RegistrationConstants {
 	public static final String LEFTTHUMB_IMG_PATH = "/images/exceptionmarks/leftThumb.png";
 	public static final String RIGHTEYE_IMG_PATH = "/images/exceptionmarks/lightBlueCrossMark.png";
 	public static final String LEFTEYE_IMG_PATH = "/images/exceptionmarks/lightBlueCrossMark.png";
-	
-	//UI Schema field group name
+
+	// UI Schema field group name
 	public static final String UI_SCHEMA_GROUP_FULL_NAME = "FullName";
+
+	// UI Schema Layout
+	public static final String HORIZONTAL_LAYOUT = "horizontal";
+	public static final String HORIZONTAL_FLUID_LAYOUT = "horizontal-fluid";
+	public static final String VERTICAL_LAYOUT = "vertical";
+	public static final String VERTICAL_FLUID_LAYOUT = "vertical-fluid";
 }
