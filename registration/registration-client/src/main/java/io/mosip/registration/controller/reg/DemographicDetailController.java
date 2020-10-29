@@ -1,6 +1,5 @@
 package io.mosip.registration.controller.reg;
 
-import static io.mosip.registration.constants.LoggerConstants.LOG_REG_BIOMETRIC_CONTROLLER;
 import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_NAME;
 
 import java.awt.Checkbox;
@@ -30,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Controller;
 
+import io.mosip.commons.packet.constants.PacketManagerConstants;
 import io.mosip.commons.packet.dto.packet.SimpleDto;
 import io.mosip.kernel.core.applicanttype.exception.InvalidApplicantArgumentException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
@@ -1749,4 +1749,32 @@ public class DemographicDetailController extends BaseController {
 			}
 		}
 	}
+	
+	
+	@SuppressWarnings("unused")
+	private boolean checkSchemaWithFXML(SchemaDTO schemaDTO) {
+		//TODO - get schemaDTO
+		List<Screen> screens = schemaDTO.getScreens();
+		for (Screen screen : screens) {
+			List<Group> groups = screen.getGroups();
+			for (Group group : groups) {
+				List<Field> fields = group.getFields();
+				for (Field field : fields) {
+					String id = field.getId();
+					if (isDemographicField(field) && getFxElement(id) == null) {
+						return false;
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+
+	private boolean isDemographicField(Field field) {
+		return (field.isInputRequired()
+				&& !(PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
+						|| PacketManagerConstants.DOCUMENTS_DATATYPE.equals(field.getType())));
+	}
+
 }
