@@ -74,6 +74,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -470,6 +471,9 @@ public class DemographicDetailController extends BaseController {
 			break;
 		case RegistrationConstants.TEXTBOX:
 			content = addContentWithTextField(schemaDTO, schemaDTO.getId(), languageType);
+			break;
+		case "checkbox":
+			content = addContentWithCheckBox(schemaDTO, languageType);
 			break;
 		}
 
@@ -1973,7 +1977,6 @@ public class DemographicDetailController extends BaseController {
 	}
 
 	public void show(String screenName) {
-
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"showing screen : " + screenName);
 		if (screenName != null && demoGraphicScreenGridPaneMap.containsKey(screenName)) {
@@ -1994,6 +1997,38 @@ public class DemographicDetailController extends BaseController {
 				}
 			}
 		}
-
+	}
+	
+	private GridPane setCssClass(GridPane gridPane, String cssClass) {
+		gridPane.setStyle(cssClass);
+		return gridPane;
+	}
+	
+	private VBox addContentWithCheckBox(UiSchemaDTO schema, String languageType) {
+		VBox vBox = new VBox();
+		vBox.setId(schema.getId() + RegistrationConstants.Parent);
+		CheckBox checkBox = new CheckBox();		
+		checkBox.setId(schema.getId() + languageType);
+		//TODO - set style for checkbox
+		if (languageType.equals(RegistrationConstants.LOCAL_LANGUAGE)) {
+			checkBox.setText(schema.getLabel().get(RegistrationConstants.SECONDARY));
+		} else {
+			checkBox.setText(schema.getLabel().get(RegistrationConstants.PRIMARY));
+			checkBox.selectedProperty().addListener((obsValue, oldValue, newValue) -> {
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Changing the selection mode of local checkbox based on primary language checkbox");
+				
+				Node localNode = getFxElement(schema.getId() + RegistrationConstants.LOCAL_LANGUAGE);
+				if(localNode != null && localNode instanceof CheckBox) {
+					CheckBox localCheckBox = (CheckBox) getFxElement(schema.getId() + RegistrationConstants.LOCAL_LANGUAGE);
+					localCheckBox.setSelected(newValue);
+				}				
+			});
+		}
+		HBox hBox = new HBox();
+		hBox.getChildren().add(checkBox);
+		hBox.setSpacing(5);
+		vBox.getChildren().add(hBox);
+		return vBox;	
 	}
 }
