@@ -226,7 +226,7 @@ public class BaseController {
 
 	private static Map<String, UiSchemaDTO> validationMap;
 
-	private static Map<String, List<io.mosip.registration.dto.schema.Screen>> latestValidationMap;
+	private static Map<String, List<io.mosip.registration.dto.schema.Screen>> latestValidationMap = new LinkedHashMap<>();
 
 	private static TreeMap<String, String> mapOfbiometricSubtypes = new TreeMap<>();
 
