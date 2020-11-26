@@ -7,6 +7,7 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -24,7 +25,9 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.response.LatestSchemaDto;
 import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDTO;
 import io.mosip.registration.entity.IdentitySchema;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.repositories.IdentitySchemaRepository;
@@ -68,6 +71,18 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 					SchemaMessage.SCHEMA_NOT_SYNCED.getMessage());
 		
 		SchemaDto dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
+		return dto.getSchema();
+	}
+	
+	@Override
+	public SchemaDTO getLatestUISchema() throws RegBaseCheckedException {
+		IdentitySchema identitySchema = getLatestEffectiveIdentitySchema();
+		
+		if(identitySchema == null)
+			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_NOT_SYNCED.getCode(), 
+					SchemaMessage.SCHEMA_NOT_SYNCED.getMessage());
+		
+		LatestSchemaDto dto = getLatestSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
 		return dto.getSchema();
 	}
 
@@ -137,13 +152,44 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 					filePath + " : " +ExceptionUtils.getStackTrace(e));
 		}
 		
-		if(!isValidFile(content, originalChecksum))
-			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_TAMPERED.getCode(), 
-					filePath + " : " +SchemaMessage.SCHEMA_TAMPERED.getMessage());
+//		if(!isValidFile(content, originalChecksum))
+//			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_TAMPERED.getCode(), 
+//					filePath + " : " +SchemaMessage.SCHEMA_TAMPERED.getMessage());
 		
 		try {
 			SchemaDto dto = MapperUtils.convertJSONStringToDto(content, 
 					new TypeReference<SchemaDto>() {});
+			return dto;
+			
+		} catch (IOException e) {
+			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_TAMPERED.getCode(), 
+					filePath + " : " +SchemaMessage.SCHEMA_TAMPERED.getMessage());
+		}
+	}
+	
+	private LatestSchemaDto getLatestSchemaFromFile(double idVersion, String originalChecksum) throws RegBaseCheckedException {
+		//String filePath = getFilePath(idVersion);
+		
+		/** hard-coded the file path for temp testing **/
+		//TODO have to remove this temp file path and uncomment the first line
+		String filePath = System.getProperty(USER_DIR) + File.separator + "SCHEMA_0.4 - Copy.json";
+		LOGGER.info(LOG_REG_SCHEMA_SYNC, APPLICATION_NAME, APPLICATION_ID, "SCHEMA :: " + filePath);
+		String content = RegistrationConstants.EMPTY;
+		
+		try {
+			content = FileUtils.readFileToString(new File(filePath), Charset.defaultCharset());
+		} catch (IOException e) {
+			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_FILE_NOT_FOUND.getCode(), 
+					filePath + " : " +ExceptionUtils.getStackTrace(e));
+		}
+		
+//		if(!isValidFile(content, originalChecksum))
+//			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_TAMPERED.getCode(), 
+//					filePath + " : " +SchemaMessage.SCHEMA_TAMPERED.getMessage());
+		
+		try {
+			LatestSchemaDto dto = MapperUtils.convertJSONStringToDto(content, 
+					new TypeReference<LatestSchemaDto>() {});
 			return dto;
 			
 		} catch (IOException e) {

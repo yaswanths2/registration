@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.schema.SchemaDTO;
 import io.mosip.registration.entity.IdentitySchema;
 import io.mosip.registration.exception.RegBaseCheckedException;
 
@@ -25,5 +26,7 @@ public interface IdentitySchemaDao {
 	public void createIdentitySchema(SchemaDto schemaDto) throws IOException;
 	
 	public SchemaDto getIdentitySchema(double idVersion) throws RegBaseCheckedException;
+
+	public SchemaDTO getLatestUISchema() throws RegBaseCheckedException;
 
 }

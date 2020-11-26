@@ -10,7 +10,7 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.dao.IdentitySchemaDao;
 import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.response.SchemaDto;
-import io.mosip.registration.entity.IdentitySchema;
+import io.mosip.registration.dto.schema.SchemaDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
 
@@ -30,6 +30,11 @@ public class IdentitySchemaServiceImpl implements IdentitySchemaService {
 	@Override
 	public List<UiSchemaDTO> getLatestEffectiveUISchema() throws RegBaseCheckedException {
 		return identitySchemaDao.getLatestEffectiveUISchema();
+	}
+	
+	@Override
+	public SchemaDTO getLatestUISchema() throws RegBaseCheckedException {
+		return identitySchemaDao.getLatestUISchema();
 	}
 
 	@Override

@@ -56,6 +56,7 @@ import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
+import io.mosip.registration.dto.schema.SchemaDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.scheduler.SchedulerUtil;
@@ -224,6 +225,8 @@ public class BaseController {
 	private List<UiSchemaDTO> uiSchemaDTOs;
 
 	private static Map<String, UiSchemaDTO> validationMap;
+	
+	private static Map<String, io.mosip.registration.dto.schema.Screen> latestValidationMap;
 
 	private static TreeMap<String, String> mapOfbiometricSubtypes = new TreeMap<>();
 
@@ -270,9 +273,22 @@ public class BaseController {
 	public void setValidations(Map<String, UiSchemaDTO> validations) {
 		validationMap = validations;
 	}
+	
+	/**
+	 * Set Latest Validations map
+	 * 
+	 * @param validations is a map id's and regex validations
+	 */
+	public void setLatestValidations(Map<String, io.mosip.registration.dto.schema.Screen> validations) {
+		latestValidationMap = validations;
+	}
 
 	public Map<String, UiSchemaDTO> getValidationMap() {
 		return validationMap;
+	}
+	
+	public Map<String, io.mosip.registration.dto.schema.Screen> getLatestValidationMap() {
+		return latestValidationMap;
 	}
 
 	/**
@@ -1560,6 +1576,23 @@ public class BaseController {
 			 * getBioAttributesBySubType("parentOrGuardianBiometrics"));
 			 */
 
+		} catch (RegBaseCheckedException e) {
+			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(e));
+		}
+	}
+	
+	public void loadUIElementsFromLatestSchema() {
+		try {
+			SchemaDTO schema = identitySchemaService.getLatestUISchema();
+			Map<String, io.mosip.registration.dto.schema.Screen> validationsMap = new LinkedHashMap<>();
+			for (io.mosip.registration.dto.schema.Screen screen : schema.getScreens()) {
+				validationsMap.put(screen.getName(), screen);
+//				if (screen.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
+//					mapOfbiometricSubtypes.put(schemaField.getSubType(), schemaField.getLabel().get("primary"));
+//				}
+			}
+			validations.setLatestValidations(validationsMap); // Set Validations Map
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(e));
