@@ -64,6 +64,8 @@ import io.mosip.registration.dto.Validator;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.LocationDto;
+import io.mosip.registration.dto.schema.Group;
+import io.mosip.registration.dto.schema.Screen;
 import io.mosip.registration.entity.Location;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
@@ -195,6 +197,8 @@ public class DemographicDetailController extends BaseController {
 	// TODO find template based group fields
 	Map<String, List<UiSchemaDTO>> templateGroup = null;
 
+	private Map<String, GridPane> demoGraphicScreenGridPaneMap = new LinkedHashMap<String, GridPane>();
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -262,30 +266,31 @@ public class DemographicDetailController extends BaseController {
 
 //			for (Entry<String, UiSchemaDTO> entry : validation.getValidationMap().entrySet()) {
 
-			templateGroup = getTemplateGroupMap();
-			for (Entry<String, List<UiSchemaDTO>> templateGroupEntry : templateGroup.entrySet()) {
-
-				List<UiSchemaDTO> list = templateGroupEntry.getValue();
-				if (list.size() <= 4) {
-					addGroupInUI(list, position, templateGroupEntry.getKey() + position);
-
-				} else {
-					for (int index = 0; index <= list.size() / 4; index++) {
-
-						int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4) : list.size();
-						List<UiSchemaDTO> subList = list.subList(index * 4, toIndex);
-						addGroupInUI(subList, position, templateGroupEntry.getKey() + position);
-
-					}
-				}
-
-//					if (isDemographicField(entry.getValue())) {
-//						GridPane mainGridPane = addContent(entry.getValue());
-//						parentFlow.add(mainGridPane);
-//						position++;
-//						positionTracker.put(mainGridPane.getId(), position);
+			initializeDemoScreens(position);
+//			 templateGroup = getTemplateGroupMap();
+//			for (Entry<String, List<UiSchemaDTO>> templateGroupEntry : templateGroup.entrySet()) {
+//
+//				List<UiSchemaDTO> list = templateGroupEntry.getValue();
+//				if (list.size() <= 4) {
+//					addGroupInUI(list, position, templateGroupEntry.getKey() + position);
+//
+//				} else {
+//					for (int index = 0; index <= list.size() / 4; index++) {
+//
+//						int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4) : list.size();
+//						List<UiSchemaDTO> subList = list.subList(index * 4, toIndex);
+//						addGroupInUI(subList, position, templateGroupEntry.getKey() + position);
+//
 //					}
-			}
+//				}
+//
+////					if (isDemographicField(entry.getValue())) {
+////						GridPane mainGridPane = addContent(entry.getValue());
+////						parentFlow.add(mainGridPane);
+////						position++;
+////						positionTracker.put(mainGridPane.getId(), position);
+////					}
+//			}
 //			}
 
 			populateDropDowns();
@@ -2175,5 +2180,73 @@ public class DemographicDetailController extends BaseController {
 		}
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"Setting secondary language combo box value completed");
+	}
+
+	private void initializeDemoScreens(int position) {
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Initializing demo screens");
+
+		demoGraphicScreenGridPaneMap.clear();
+
+		List<Screen> screens = getDemoScreens();
+
+		if (screens != null && !screens.isEmpty()) {
+
+			for (Screen screen : screens) {
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Started screen : " + screen.getName());
+
+				// TODO Get All Screens Group Fields
+
+				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
+
+					for (Group group : screen.getGroups()) {
+
+						LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+								"Verifying group : " + group.getName());
+
+						// TODO Find group is visible or not
+						boolean isVisible = true;
+
+						if (isVisible && group.getFields() != null && !group.getFields().isEmpty()) {
+							LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+									"Group is active : " + group.getName());
+
+							List<UiSchemaDTO> list = group.getFields();
+
+							if (list.size() <= 4) {
+								addGroupInUI(list, position, group.getName() + position);
+
+							} else {
+								for (int index = 0; index <= list.size() / 4; index++) {
+
+									int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4)
+											: list.size();
+									List<UiSchemaDTO> subList = list.subList(index * 4, toIndex);
+									addGroupInUI(subList, position, group.getName() + position);
+
+								}
+							}
+						}
+					}
+
+				}
+			}
+
+//				createSceneGridPane(screen);
+		}
+
+		// TODO Need to handle in screen level
+	}
+
+	private List<Screen> getDemoScreens() {
+
+		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+				"Get Demographic screens from UI schema");
+
+		// TODO get UiSchemaDTO
+		List<Screen> screens = null;
+
+		return null;
 	}
 }
