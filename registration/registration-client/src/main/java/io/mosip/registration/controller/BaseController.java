@@ -1894,4 +1894,12 @@ public class BaseController {
 				.filter(schemaDto -> schemaDto.getGroup() != null && schemaDto.getGroup().equalsIgnoreCase(group))
 				.collect(Collectors.toList());
 	}
+	
+	public List<io.mosip.registration.dto.schema.Screen> getScreens(String screenName) {
+
+		// TODO get UiSchemaDTO
+		List<io.mosip.registration.dto.schema.Screen> screens = null;
+
+		return screens;
+	}
 }

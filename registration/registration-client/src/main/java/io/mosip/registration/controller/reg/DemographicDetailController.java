@@ -2188,7 +2188,7 @@ public class DemographicDetailController extends BaseController {
 
 		demoGraphicScreenGridPaneMap.clear();
 
-		List<Screen> screens = getDemoScreens();
+		List<Screen> screens = getScreens(RegistrationConstants.DEMOGRAPHIC_DETAIL);
 
 		if (screens != null && !screens.isEmpty()) {
 
@@ -2239,14 +2239,5 @@ public class DemographicDetailController extends BaseController {
 		// TODO Need to handle in screen level
 	}
 
-	private List<Screen> getDemoScreens() {
 
-		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-				"Get Demographic screens from UI schema");
-
-		// TODO get UiSchemaDTO
-		List<Screen> screens = null;
-
-		return null;
-	}
 }
