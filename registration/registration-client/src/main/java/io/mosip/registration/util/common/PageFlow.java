@@ -14,8 +14,8 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.controller.reg.Validations;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.dto.Field;
 
 /**
  * This class will give the Page Flow
@@ -36,7 +36,7 @@ public class PageFlow {
 	private static Map<String, Map<String, Boolean>> onBoardingPageFlowMap;
 
 	@Autowired
-	private Validations validations;
+	private BaseController baseController;
 
 	/**
 	 * This method sets the initial page flow for all the functionalities like New
@@ -72,9 +72,9 @@ public class PageFlow {
 		registrationMap.put(RegistrationConstants.DEMOGRAPHIC_DETAIL, demographicMap);
 
 		String docType = "documentType";
-		List<UiSchemaDTO> docList = null;
-		if(validations != null && validations.getValidationMap() != null && !validations.getValidationMap().isEmpty()) {
-			docList = validations.getValidationMap().values().stream()
+		List<Field> docList = null;
+		if(baseController != null && baseController.getUiSchemaFieldMap() != null && !baseController.getUiSchemaFieldMap().isEmpty()) {
+			docList = baseController.getUiSchemaFieldMap().values().stream()
 					.filter(schemaDto -> schemaDto.getType() != null && schemaDto.getType().equalsIgnoreCase(docType))
 					.collect(Collectors.toList());
 		}

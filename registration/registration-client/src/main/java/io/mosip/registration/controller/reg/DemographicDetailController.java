@@ -59,7 +59,7 @@ import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RequiredOnExpr;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.Validator;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
@@ -195,7 +195,7 @@ public class DemographicDetailController extends BaseController {
 
 	private Map<String, List<String>> orderOfAddressListByGroup = new LinkedHashMap<>();
 	// TODO find template based group fields
-	Map<String, List<UiSchemaDTO>> templateGroup = null;
+	Map<String, List<Field>> templateGroup = null;
 
 	private Map<String, GridPane> demoGraphicScreenGridPaneMap = new LinkedHashMap<String, GridPane>();
 
@@ -345,33 +345,33 @@ public class DemographicDetailController extends BaseController {
 		List<Location> locations = masterSyncDao.getLocationDetails(applicationContext.getApplicationLanguage());
 		Map<Integer, String> treeMap = new TreeMap<Integer, String>();
 
-		Collection<UiSchemaDTO> fields = validation.getValidationMap().values();
+		Collection<Field> fields = getUiSchemaFieldMap().values();
 		for (Location location : locations) {
-			List<UiSchemaDTO> matchedfield = fields.stream()
+			List<Field> matchedfield = fields.stream()
 					.filter(field -> isDemographicField(field) && field.getSubType() != null
 							&& RegistrationConstants.DROPDOWN.equals(field.getControlType())
 							&& field.getSubType().equalsIgnoreCase(location.getHierarchyName()))
 					.collect(Collectors.toList());
 
 			if (matchedfield != null && !matchedfield.isEmpty()) {
-				for (UiSchemaDTO uiSchemaDTO : matchedfield) {
+				for (Field field : matchedfield) {
 
-					if (orderOfAddressMapByGroup.containsKey(uiSchemaDTO.getGroup())) {
+					if (orderOfAddressMapByGroup.containsKey(field.getGroup())) {
 
-						if (!orderOfAddressMapByGroup.get(uiSchemaDTO.getGroup())
+						if (!orderOfAddressMapByGroup.get(field.getGroup())
 								.containsKey(location.getHierarchyLevel())) {
 							TreeMap<Integer, String> hirearchyMap = orderOfAddressMapByGroup
-									.get(uiSchemaDTO.getGroup());
-							hirearchyMap.put(location.getHierarchyLevel(), uiSchemaDTO.getId());
+									.get(field.getGroup());
+							hirearchyMap.put(location.getHierarchyLevel(), field.getId());
 
-							orderOfAddressMapByGroup.put(uiSchemaDTO.getGroup(), hirearchyMap);
+							orderOfAddressMapByGroup.put(field.getGroup(), hirearchyMap);
 						}
 					} else {
 
 						TreeMap<Integer, String> hirearchyMap = new TreeMap<>();
-						hirearchyMap.put(location.getHierarchyLevel(), uiSchemaDTO.getId());
+						hirearchyMap.put(location.getHierarchyLevel(), field.getId());
 
-						orderOfAddressMapByGroup.put(uiSchemaDTO.getGroup(), hirearchyMap);
+						orderOfAddressMapByGroup.put(field.getGroup(), hirearchyMap);
 					}
 //					orderOfAddressMapByGroup.(location.getHierarchyLevel(), matchedfield.get(0).getId());
 					LOGGER.info("REGISTRATION - CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -468,7 +468,7 @@ public class DemographicDetailController extends BaseController {
 	}
 
 	@SuppressWarnings("unlikely-arg-type")
-	public GridPane subGridPane(UiSchemaDTO schemaDTO, String languageType, int noOfItems) {
+	public GridPane subGridPane(Field schemaDTO, String languageType, int noOfItems) {
 		GridPane gridPane = new GridPane();
 
 		ObservableList<ColumnConstraints> columnConstraints = gridPane.getColumnConstraints();
@@ -647,7 +647,7 @@ public class DemographicDetailController extends BaseController {
 
 	private static final String GENDER = "gender";
 
-	public VBox addContentWithTextField(UiSchemaDTO schema, String fieldName, String languageType) {
+	public VBox addContentWithTextField(Field schema, String fieldName, String languageType) {
 		TextField field = new TextField();
 		Label label = new Label();
 		Label validationMessage = new Label();
@@ -774,7 +774,7 @@ public class DemographicDetailController extends BaseController {
 		}
 	}
 
-	public <T> VBox addContentWithComboBoxObject(String fieldName, UiSchemaDTO schema, String languageType) {
+	public <T> VBox addContentWithComboBoxObject(String fieldName, Field schema, String languageType) {
 
 		ComboBox<GenericDto> field = new ComboBox<GenericDto>();
 		Label label = new Label();
@@ -801,7 +801,7 @@ public class DemographicDetailController extends BaseController {
 		return vbox;
 	}
 
-	public <T> VBox addContentWithButtons(String fieldName, UiSchemaDTO schema, String languageType) {
+	public <T> VBox addContentWithButtons(String fieldName, Field schema, String languageType) {
 		Label label = new Label();
 		Label validationMessage = new Label();
 
@@ -1205,7 +1205,7 @@ public class DemographicDetailController extends BaseController {
 	private void addDemoGraphicDetailsToSession() {
 		try {
 			RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
-			for (UiSchemaDTO schemaField : validation.getValidationMap().values()) {
+			for (Field schemaField : getUiSchemaFieldMap().values()) {
 				if (schemaField.getControlType() == null)
 					continue;
 
@@ -1391,7 +1391,7 @@ public class DemographicDetailController extends BaseController {
 //
 //			}
 		}
-		for (Entry<String, UiSchemaDTO> selectionField : validation.getValidationMap().entrySet()) {
+		for (Entry<String, Field> selectionField : getUiSchemaFieldMap().entrySet()) {
 
 			updateDemographicScreen(selectionField.getKey(), selectionList, false);
 			updateDemographicScreen(selectionField.getKey() + RegistrationConstants.LOCAL_LANGUAGE, selectionList,
@@ -1438,7 +1438,7 @@ public class DemographicDetailController extends BaseController {
 			RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
 			Map<String, Object> demographics = registrationDTO.getDemographics();
 
-			for (UiSchemaDTO schemaField : validation.getValidationMap().values()) {
+			for (Field schemaField : getUiSchemaFieldMap().values()) {
 				Object value = demographics.get(schemaField.getId());
 				if (value == null)
 					continue;
@@ -1732,21 +1732,21 @@ public class DemographicDetailController extends BaseController {
 
 	}
 
-	private void addGroupContent(List<UiSchemaDTO> uiSchemaDTOs, GridPane groupGridPane) {
+	private void addGroupContent(List<Field> fields, GridPane groupGridPane) {
 
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, "Adding group contents");
 
 		GridPane horizontalRowGridPane = null;
-		if (uiSchemaDTOs != null && !uiSchemaDTOs.isEmpty()) {
+		if (fields != null && !fields.isEmpty()) {
 
-			if (uiSchemaDTOs.size() > 0) {
+			if (fields.size() > 0) {
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Requesting prepare grid pane for horizontal layout");
 
-				horizontalRowGridPane = prepareRowGridPane(uiSchemaDTOs.size());
+				horizontalRowGridPane = prepareRowGridPane(fields.size());
 			}
 
-			for (int index = 0; index < uiSchemaDTOs.size(); index++) {
+			for (int index = 0; index < fields.size(); index++) {
 
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Adding ui schema of application language");
@@ -1755,7 +1755,7 @@ public class DemographicDetailController extends BaseController {
 //				if (uiSchemaDTOs.size() > 1) {
 //					isLeftSpaceRequired = false;
 //				}
-				GridPane applicationLanguageGridPane = subGridPane(uiSchemaDTOs.get(index), "", uiSchemaDTOs.size());
+				GridPane applicationLanguageGridPane = subGridPane(fields.get(index), "", fields.size());
 
 //				applicationLanguageGridPane.setId(uiSchemaDTOs.get(index).getId());
 
@@ -1767,23 +1767,23 @@ public class DemographicDetailController extends BaseController {
 					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 							"Adding ui schema of local language");
 
-					GridPane localLanguageGridPane = subGridPane(uiSchemaDTOs.get(index),
+					GridPane localLanguageGridPane = subGridPane(fields.get(index),
 							RegistrationConstants.LOCAL_LANGUAGE,
-							uiSchemaDTOs.size() > 1 ? uiSchemaDTOs.size() + 4 : uiSchemaDTOs.size());
+							fields.size() > 1 ? fields.size() + 4 : fields.size());
 
 					if (localLanguageGridPane != null) {
 
 //						localLanguageGridPane
 //								.setId(uiSchemaDTOs.get(index).getId() + RegistrationConstants.LOCAL_LANGUAGE);
 
-						rowGridPane.addColumn(horizontalRowGridPane == null ? 2 : uiSchemaDTOs.size() + index,
+						rowGridPane.addColumn(horizontalRowGridPane == null ? 2 : fields.size() + index,
 								localLanguageGridPane);
 					}
 				}
 
 				if (horizontalRowGridPane == null) {
 					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-							"Setting vertical row gridpane for : " + uiSchemaDTOs.get(index).getId());
+							"Setting vertical row gridpane for : " + fields.get(index).getId());
 					groupGridPane.getChildren().add(rowGridPane);
 				}
 
@@ -1945,47 +1945,36 @@ public class DemographicDetailController extends BaseController {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void refreshDemographicGroups(Map<String, Object> mvelDataMap) {
-
+		//TODO - Add loggers
+		//TODO - remove demo/doc/biometrics from session, if mvel says not required
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"Refreshing demographic groups");
 
 		Map<String, Map<String, Object>> context = new HashMap();
 		context.put("identity", mvelDataMap);
-		for (Entry<String, List<UiSchemaDTO>> group : templateGroup.entrySet()) {
-
-			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-					"Fetching visible validator for group ");
-
-			for (UiSchemaDTO uiSchemaDTO : group.getValue()) {
-
-				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-						"Refreshing field : " + uiSchemaDTO.getId());
-
-				RequiredOnExpr requiredOnExpr = uiSchemaDTO.getVisible();
-
-				if (uiSchemaDTO.getVisible() != null && requiredOnExpr.getEngine() != null
-						&& !requiredOnExpr.getEngine().isEmpty()) {
-					if (requiredOnExpr.getEngine().equalsIgnoreCase(RegistrationConstants.MVEL_TYPE)) {
-
+		for (Screen screen : getScreens(RegistrationConstants.DEMOGRAPHIC_DETAIL)) {
+			List<Group> groups = screen.getGroups();
+			if (groups != null && !groups.isEmpty()) {
+				for (Group group : groups) {
+					boolean required = true;
+					if (group.getVisible() != null
+							&& RegistrationConstants.MVEL_TYPE.equalsIgnoreCase(group.getVisible().getEngine())
+							&& group.getVisible().getExpr() != null && !group.getVisible().getExpr().isEmpty()) {
+						RequiredOnExpr requiredOnExpr = group.getVisible();
 						VariableResolverFactory resolverFactory = new MapVariableResolverFactory(context);
-						boolean required = MVEL.evalToBoolean(requiredOnExpr.getExpr(), resolverFactory);
-
-						updateFields(Arrays.asList(uiSchemaDTO), required);
-
+						required = MVEL.evalToBoolean(requiredOnExpr.getExpr(), resolverFactory);
 					}
+					updateFields(group.getFields(), required);
 				}
 			}
-
-			// TODO Required On
-
 		}
 	}
 
-	private void updateFields(List<UiSchemaDTO> fields, boolean isVisible) {
+	private void updateFields(List<Field> fields, boolean isVisible) {
 
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID, "Updating fields");
 
-		for (UiSchemaDTO field : fields) {
+		for (Field field : fields) {
 
 			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					"Updating field : " + field.getId());
@@ -2059,16 +2048,16 @@ public class DemographicDetailController extends BaseController {
 		}
 	}
 
-	private Map<String, List<UiSchemaDTO>> getTemplateGroupMap() {
+	private Map<String, List<Field>> getTemplateGroupMap() {
 
-		Map<String, List<UiSchemaDTO>> templateGroupMap = new LinkedHashMap<>();
+		Map<String, List<Field>> templateGroupMap = new LinkedHashMap<>();
 
-		for (Entry<String, UiSchemaDTO> entry : validation.getValidationMap().entrySet()) {
+		for (Entry<String, Field> entry : getUiSchemaFieldMap().entrySet()) {
 			if (isDemographicField(entry.getValue())) {
 
-				List<UiSchemaDTO> list = templateGroupMap.get(entry.getValue().getAlignmentGroup());
+				List<Field> list = templateGroupMap.get(entry.getValue().getAlignmentGroup());
 				if (list == null) {
-					list = new LinkedList<UiSchemaDTO>();
+					list = new LinkedList<Field>();
 				}
 				list.add(entry.getValue());
 				templateGroupMap.put(entry.getValue().getAlignmentGroup() == null ? entry.getKey() + "TemplateGroup"
@@ -2212,7 +2201,7 @@ public class DemographicDetailController extends BaseController {
 							LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 									"Group is active : " + group.getName());
 
-							List<UiSchemaDTO> list = group.getFields();
+							List<Field> list = group.getFields();
 
 							if (list.size() <= 4) {
 								addGroupInUI(list, position, group.getName() + position);
@@ -2222,7 +2211,7 @@ public class DemographicDetailController extends BaseController {
 
 									int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4)
 											: list.size();
-									List<UiSchemaDTO> subList = list.subList(index * 4, toIndex);
+									List<Field> subList = list.subList(index * 4, toIndex);
 									addGroupInUI(subList, position, group.getName() + position);
 
 								}
@@ -2238,6 +2227,5 @@ public class DemographicDetailController extends BaseController {
 
 		// TODO Need to handle in screen level
 	}
-
 
 }

@@ -24,7 +24,7 @@ import io.mosip.registration.controller.auth.AuthenticationController;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.sync.MasterSyncService;
@@ -119,7 +119,7 @@ public class RegistrationController extends BaseController {
 		}
 	}
 
-	public void init(String UIN, HashMap<String, Object> selectionListDTO, Map<String, UiSchemaDTO> selectedFields,
+	public void init(String UIN, HashMap<String, Object> selectionListDTO, Map<String, Field> selectedFields,
 			List<String> selectedFieldGroups) {
 		validation.updateAsLostUIN(false);
 		createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_UPDATE);
@@ -388,8 +388,8 @@ public class RegistrationController extends BaseController {
 		List<String> defaultFieldGroups = new ArrayList<String>();
 
 		defaultFieldGroups.add(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
-		for (UiSchemaDTO uiSchemaDTO : fetchByGroup(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME)) {
-			defaultFields.add(uiSchemaDTO.getId());
+		for (Field field : fetchByGroup(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME)) {
+			defaultFields.add(field.getId());
 		}
 		// Used to update printing name as default
 		registrationDTO.setDefaultUpdatableFieldGroups(defaultFieldGroups);

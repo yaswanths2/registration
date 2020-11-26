@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.Timestamp;
-import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +23,7 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.dao.IdentitySchemaDao;
-import io.mosip.registration.dto.UiSchemaDTO;
-import io.mosip.registration.dto.response.LatestSchemaDto;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.response.UiSchemaDTO;
 import io.mosip.registration.dto.schema.SchemaDTO;
 import io.mosip.registration.entity.IdentitySchema;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -63,26 +60,14 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 	}
 
 	@Override
-	public List<UiSchemaDTO> getLatestEffectiveUISchema() throws RegBaseCheckedException {
+	public SchemaDTO getLatestEffectiveUISchema() throws RegBaseCheckedException {
 		IdentitySchema identitySchema = getLatestEffectiveIdentitySchema();
 		
 		if(identitySchema == null)
 			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_NOT_SYNCED.getCode(), 
 					SchemaMessage.SCHEMA_NOT_SYNCED.getMessage());
 		
-		SchemaDto dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
-		return dto.getSchema();
-	}
-	
-	@Override
-	public SchemaDTO getLatestUISchema() throws RegBaseCheckedException {
-		IdentitySchema identitySchema = getLatestEffectiveIdentitySchema();
-		
-		if(identitySchema == null)
-			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_NOT_SYNCED.getCode(), 
-					SchemaMessage.SCHEMA_NOT_SYNCED.getMessage());
-		
-		LatestSchemaDto dto = getLatestSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
+		UiSchemaDTO dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
 		return dto.getSchema();
 	}
 
@@ -94,19 +79,19 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_NOT_SYNCED.getCode(), 
 					SchemaMessage.SCHEMA_NOT_SYNCED.getMessage());
 		
-		SchemaDto dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
+		UiSchemaDTO dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
 		return dto.getSchemaJson();
 	}
 
 	@Override
-	public List<UiSchemaDTO> getUISchema(double idVersion) throws RegBaseCheckedException {
+	public SchemaDTO getUISchema(double idVersion) throws RegBaseCheckedException {
 		IdentitySchema identitySchema = identitySchemaRepository.findByIdVersion(idVersion);
 		
 		if(identitySchema == null)
 			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_FILE_NOT_FOUND.getCode(), 
 					SchemaMessage.SCHEMA_FILE_NOT_FOUND.getMessage());
 		
-		SchemaDto dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
+		UiSchemaDTO dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
 		return dto.getSchema();
 	}
 
@@ -118,12 +103,12 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_FILE_NOT_FOUND.getCode(), 
 					SchemaMessage.SCHEMA_FILE_NOT_FOUND.getMessage());
 		
-		SchemaDto dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
+		UiSchemaDTO dto = getSchemaFromFile(identitySchema.getIdVersion(), identitySchema.getFileHash());
 		return dto.getSchemaJson();
 	}
 
 	@Override
-	public void createIdentitySchema(SchemaDto schemaReponseDto) throws IOException {
+	public void createIdentitySchema(UiSchemaDTO schemaReponseDto) throws IOException {
 		String filePath = getFilePath(schemaReponseDto.getIdVersion());
 		String content = MapperUtils.convertObjectToJsonString(schemaReponseDto);
 		
@@ -141,33 +126,7 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 		identitySchemaRepository.save(identitySchema);
 	}
 	
-	private SchemaDto getSchemaFromFile(double idVersion, String originalChecksum) throws RegBaseCheckedException {
-		String filePath = getFilePath(idVersion);
-		String content = RegistrationConstants.EMPTY;
-		
-		try {
-			content = FileUtils.readFileToString(new File(filePath));
-		} catch (IOException e) {
-			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_FILE_NOT_FOUND.getCode(), 
-					filePath + " : " +ExceptionUtils.getStackTrace(e));
-		}
-		
-//		if(!isValidFile(content, originalChecksum))
-//			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_TAMPERED.getCode(), 
-//					filePath + " : " +SchemaMessage.SCHEMA_TAMPERED.getMessage());
-		
-		try {
-			SchemaDto dto = MapperUtils.convertJSONStringToDto(content, 
-					new TypeReference<SchemaDto>() {});
-			return dto;
-			
-		} catch (IOException e) {
-			throw new RegBaseCheckedException(SchemaMessage.SCHEMA_TAMPERED.getCode(), 
-					filePath + " : " +SchemaMessage.SCHEMA_TAMPERED.getMessage());
-		}
-	}
-	
-	private LatestSchemaDto getLatestSchemaFromFile(double idVersion, String originalChecksum) throws RegBaseCheckedException {
+	private UiSchemaDTO getSchemaFromFile(double idVersion, String originalChecksum) throws RegBaseCheckedException {
 		//String filePath = getFilePath(idVersion);
 		
 		/** hard-coded the file path for temp testing **/
@@ -188,8 +147,8 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 //					filePath + " : " +SchemaMessage.SCHEMA_TAMPERED.getMessage());
 		
 		try {
-			LatestSchemaDto dto = MapperUtils.convertJSONStringToDto(content, 
-					new TypeReference<LatestSchemaDto>() {});
+			UiSchemaDTO dto = MapperUtils.convertJSONStringToDto(content, 
+					new TypeReference<UiSchemaDTO>() {});
 			return dto;
 			
 		} catch (IOException e) {
@@ -213,7 +172,7 @@ public class IdentitySchemaDaoImpl implements IdentitySchemaDao {
 	}
 
 	@Override
-	public SchemaDto getIdentitySchema(double idVersion) throws RegBaseCheckedException {
+	public UiSchemaDTO getIdentitySchema(double idVersion) throws RegBaseCheckedException {
 		IdentitySchema identitySchema = identitySchemaRepository.findByIdVersion(idVersion);
 		
 		if(identitySchema == null)

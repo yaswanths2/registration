@@ -330,7 +330,7 @@ public class LoginController extends BaseController implements Initializable {
 		loginRoot = BaseController.load(getClass().getResource(RegistrationConstants.INITIAL_PAGE));
 
 		scene = getScene(loginRoot);
-		loadUIElementsFromSchema();
+		loadUiSchema();
 		pageFlow.loadPageFlow();
 		Screen screen = Screen.getPrimary();
 		Rectangle2D bounds = screen.getVisualBounds();

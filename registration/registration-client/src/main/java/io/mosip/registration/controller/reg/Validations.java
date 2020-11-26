@@ -28,7 +28,7 @@ import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.Validator;
 import io.mosip.registration.dto.mastersync.BlacklistedWordsDto;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
@@ -224,7 +224,7 @@ public class Validations extends BaseController {
 				return true;
 			}
 
-			boolean isMandatory = requiredFieldValidator.isRequiredField(getValidationMap().get(label),
+			boolean isMandatory = requiredFieldValidator.isRequiredField(getUiSchemaFieldMap().get(label),
 					getRegistrationDTOFromSession());
 
 			if (isMandatory && (node.getId().contains("gender") || node.getId().contains("residence"))) {
@@ -297,18 +297,18 @@ public class Validations extends BaseController {
 			boolean showAlert = (noAlert.contains(node.getId()) && id.contains(RegistrationConstants.ON_TYPE));
 			String inputText = node.getText();
 			String ageDateFieldId = getAgeDateFieldId(label);
-			UiSchemaDTO uiSchemaDTO = getValidationMap().get(ageDateFieldId == null ? label : ageDateFieldId);
+			Field field = getUiSchemaFieldMap().get(ageDateFieldId == null ? label : ageDateFieldId);
 
-			if (uiSchemaDTO != null) {
-				boolean isMandatory = requiredFieldValidator.isRequiredField(uiSchemaDTO, registrationDto);
+			if (field != null) {
+				boolean isMandatory = requiredFieldValidator.isRequiredField(field, registrationDto);
 
 				switch (registrationDto.getRegistrationCategory()) {
 				case RegistrationConstants.PACKET_TYPE_UPDATE:
-					isInputValid = doMandatoryCheckOnUpdateUIN(parentPane, inputText, id, uiSchemaDTO, isMandatory,
+					isInputValid = doMandatoryCheckOnUpdateUIN(parentPane, inputText, id, field, isMandatory,
 							node, registrationDto);
 					break;
 				case RegistrationConstants.PACKET_TYPE_NEW:
-					isInputValid = doMandatoryCheckOnNewReg(inputText, uiSchemaDTO, isMandatory);
+					isInputValid = doMandatoryCheckOnNewReg(inputText, field, isMandatory);
 					if (!isInputValid) {
 						generateInvalidValueAlert(parentPane, id,
 								getFromLabelMap(label).concat(RegistrationConstants.SPACE)
@@ -349,8 +349,8 @@ public class Validations extends BaseController {
 							isInputValid = false;
 						}
 					} else if ((inputText != null && !inputText.isEmpty())
-							&& Arrays.asList("UIN", "RID").contains(uiSchemaDTO.getSubType())) {
-						isInputValid = validateUinOrRidField(inputText, registrationDto, uiSchemaDTO);
+							&& Arrays.asList("UIN", "RID").contains(field.getSubType())) {
+						isInputValid = validateUinOrRidField(inputText, registrationDto, field);
 					}
 
 					if (!isInputValid) {
@@ -416,7 +416,7 @@ public class Validations extends BaseController {
 		}
 	}
 
-	private boolean doMandatoryCheckOnNewReg(String inputText, UiSchemaDTO schemaField, boolean isMandatory) {
+	private boolean doMandatoryCheckOnNewReg(String inputText, Field schemaField, boolean isMandatory) {
 		if (schemaField != null) {
 
 			if (isMandatory && (inputText == null || inputText.isEmpty())) {
@@ -426,7 +426,7 @@ public class Validations extends BaseController {
 		return true;
 	}
 
-	private boolean doMandatoryCheckOnUpdateUIN(Pane parentPane, String inputText, String id, UiSchemaDTO schemaField,
+	private boolean doMandatoryCheckOnUpdateUIN(Pane parentPane, String inputText, String id, Field schemaField,
 			boolean isMandatory, Node node, RegistrationDTO registrationDto) {
 
 		if (schemaField != null && !node.isDisabled()) {
@@ -501,7 +501,7 @@ public class Validations extends BaseController {
 					return true;
 				}
 
-				boolean isMandatory = requiredFieldValidator.isRequiredField(getValidationMap().get(label),
+				boolean isMandatory = requiredFieldValidator.isRequiredField(getUiSchemaFieldMap().get(label),
 						getRegistrationDTOFromSession());
 
 				if (isMandatory) {
@@ -615,7 +615,7 @@ public class Validations extends BaseController {
 	 * return isIdValid; }
 	 */
 
-	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, UiSchemaDTO schemaField) {
+	private boolean validateUinOrRidField(String inputText, RegistrationDTO registrationDto, Field schemaField) {
 		boolean isValid = true;
 		try {
 			if ("UIN".equals(schemaField.getSubType())) {
@@ -712,9 +712,9 @@ public class Validations extends BaseController {
 	 */
 
 	private String getRegex(String fieldId, String regexType) {
-		UiSchemaDTO uiSchemaDTO = getValidationMap().get(fieldId);
-		if (uiSchemaDTO != null && uiSchemaDTO.getValidators() != null) {
-			Optional<Validator> validator = uiSchemaDTO.getValidators().stream()
+		Field field = getUiSchemaFieldMap().get(fieldId);
+		if (field != null && field.getValidators() != null) {
+			Optional<Validator> validator = field.getValidators().stream()
 					.filter(v -> v.getType().equalsIgnoreCase(regexType)).findFirst();
 			if (validator.isPresent())
 				return validator.get().getValidator();

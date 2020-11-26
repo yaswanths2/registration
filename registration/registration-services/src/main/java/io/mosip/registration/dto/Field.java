@@ -28,7 +28,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UiSchemaDTO {
+public class Field {
 
 	private String id;
 	private boolean inputRequired;

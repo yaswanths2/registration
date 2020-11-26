@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.mosip.registration.dto.RequiredOnExpr;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,6 +26,6 @@ public class Group {
 	private RequiredOnExpr visible;
 	private boolean enabled;
 	private int order;
-	private List<UiSchemaDTO> fields;
+	private List<Field> fields;
 
 }

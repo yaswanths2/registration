@@ -52,7 +52,7 @@ import io.mosip.registration.dao.DocumentTypeDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.entity.DocumentType;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -70,18 +70,18 @@ import io.mosip.registration.service.external.PreRegZipHandlingService;
 @Service
 public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 
-	/*@Autowired
-	private KeyGenerator keyGenerator;*/
+	/*
+	 * @Autowired private KeyGenerator keyGenerator;
+	 */
 
 	@Autowired
 	private DocumentTypeDAO documentTypeDAO;
 
 	@Autowired
 	private MasterSyncDao masterSyncDao;
-	
+
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
-	
 
 	private static final Logger LOGGER = AppConfig.getLogger(PreRegZipHandlingServiceImpl.class);
 
@@ -93,58 +93,66 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	 */
 	@Override
 	public RegistrationDTO extractPreRegZipFile(byte[] preRegZipFile) throws RegBaseCheckedException {
-		LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-				"extractPreRegZipFile invoked");
-		try{
+		LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "extractPreRegZipFile invoked");
+		try {
 			BufferedReader bufferedReader = null;
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
 				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 					if (zipEntry.getName().equalsIgnoreCase("ID.json")) {
-						bufferedReader = new BufferedReader(new InputStreamReader(zipInputStream, StandardCharsets.UTF_8));
-						parseDemographicJson(bufferedReader, zipEntry);						
-					}	
+						bufferedReader = new BufferedReader(
+								new InputStreamReader(zipInputStream, StandardCharsets.UTF_8));
+						parseDemographicJson(bufferedReader, zipEntry);
+					}
 				}
-			}finally {
-				if(bufferedReader != null) {
+			} finally {
+				if (bufferedReader != null) {
 					bufferedReader.close();
 					bufferedReader = null;
-				}				
+				}
 			}
-			
+
 			try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(preRegZipFile))) {
 				ZipEntry zipEntry;
 				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
 					String fileName = zipEntry.getName();
-					//if (zipEntry.getName().contains("_")) {
-					LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-							"extractPreRegZipFile zipEntry >>>> " + fileName);				
-						Optional<Map.Entry<String, DocumentDto>> result = getRegistrationDtoContent().getDocuments().entrySet().stream()
-								.filter(e -> fileName.equals(e.getValue().getValue().concat(".").concat(e.getValue().getFormat()))).findFirst();
-						if(result.isPresent()) {
-							DocumentDto documentDto = result.get().getValue();
-							documentDto.setDocument(IOUtils.toByteArray(zipInputStream));
-							
-							List<DocumentType> documentTypes = documentTypeDAO.getDocTypeByName(documentDto.getType());
-							if(Objects.nonNull(documentTypes) && !documentTypes.isEmpty()) {
-								LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-										documentDto.getType() + " >>>> documentTypes.get(0).getCode() >>>> " + documentTypes.get(0).getCode());	
-								documentDto.setType(documentTypes.get(0).getCode());
-								documentDto.setValue(documentDto.getCategory().concat("_").concat(documentDto.getType()));
-							}							
-							getRegistrationDtoContent().addDocument(result.get().getKey(), result.get().getValue());
-							LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
-									"Added zip entry as document for field >>>> " + result.get().getKey());	
+					// if (zipEntry.getName().contains("_")) {
+					LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME,
+							RegistrationConstants.APPLICATION_ID, "extractPreRegZipFile zipEntry >>>> " + fileName);
+					Optional<Map.Entry<String, DocumentDto>> result = getRegistrationDtoContent().getDocuments()
+							.entrySet().stream()
+							.filter(e -> fileName
+									.equals(e.getValue().getValue().concat(".").concat(e.getValue().getFormat())))
+							.findFirst();
+					if (result.isPresent()) {
+						DocumentDto documentDto = result.get().getValue();
+						documentDto.setDocument(IOUtils.toByteArray(zipInputStream));
+
+						List<DocumentType> documentTypes = documentTypeDAO.getDocTypeByName(documentDto.getType());
+						if (Objects.nonNull(documentTypes) && !documentTypes.isEmpty()) {
+							LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME,
+									RegistrationConstants.APPLICATION_ID,
+									documentDto.getType() + " >>>> documentTypes.get(0).getCode() >>>> "
+											+ documentTypes.get(0).getCode());
+							documentDto.setType(documentTypes.get(0).getCode());
+							documentDto.setValue(documentDto.getCategory().concat("_").concat(documentDto.getType()));
 						}
-					//}	
+						getRegistrationDtoContent().addDocument(result.get().getKey(), result.get().getValue());
+						LOGGER.debug("PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME,
+								RegistrationConstants.APPLICATION_ID,
+								"Added zip entry as document for field >>>> " + result.get().getKey());
+					}
+					// }
 				}
 			}
-			
+
 			Set<Entry<String, DocumentDto>> entries = getRegistrationDtoContent().getDocuments().entrySet();
-			entries.stream()
-				.filter(e -> e.getValue().getDocument() == null || e.getValue().getDocument().length == 0)
-				.forEach(e -> { getRegistrationDtoContent().removeDocument(e.getKey()); });
-		
+			entries.stream().filter(e -> e.getValue().getDocument() == null || e.getValue().getDocument().length == 0)
+					.forEach(e -> {
+						getRegistrationDtoContent().removeDocument(e.getKey());
+					});
+
 		} catch (IOException exception) {
 			exception.printStackTrace();
 			LOGGER.error("REGISTRATION - PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME,
@@ -160,8 +168,7 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 		}
 		return getRegistrationDtoContent();
 	}
-	
-	
+
 	private void attachDocument(DocumentDto documentDetailsDTO, ZipInputStream zipInputStream, String fileName,
 			String docCatgory) throws IOException {
 		documentDetailsDTO.setDocument(IOUtils.toByteArray(zipInputStream));
@@ -222,45 +229,43 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 	 * This method is used to parse the demographic json and converts it into
 	 * RegistrationDto
 	 * 
-	 * @param bufferedReader
-	 *            - reader for text file
-	 * @param zipEntry
-	 *            - a file entry in zip
-	 * @throws RegBaseCheckedException
-	 *             - holds the cheked exceptions
+	 * @param bufferedReader - reader for text file
+	 * @param zipEntry       - a file entry in zip
+	 * @throws RegBaseCheckedException - holds the cheked exceptions
 	 */
 	@SuppressWarnings("unchecked")
 	private void parseDemographicJson(BufferedReader bufferedReader, ZipEntry zipEntry) throws RegBaseCheckedException {
 
 		try {
-			
+
 			String value;
 			StringBuilder jsonString = new StringBuilder();
 			while ((value = bufferedReader.readLine()) != null) {
 				jsonString.append(value);
 			}
-			
+
 			if (!StringUtils.isEmpty(jsonString) && validateDemographicInfoObject()) {
 				JSONObject jsonObject = (JSONObject) new JSONObject(jsonString.toString()).get("identity");
-				
+
 				LOGGER.debug("REGISTRATION - PRE_REG_ZIP_HANDLING_SERVICE_IMPL", RegistrationConstants.APPLICATION_NAME,
 						RegistrationConstants.APPLICATION_ID, jsonString.toString());
-				
-				if(!jsonObject.has("IDSchemaVersion"))
+
+				if (!jsonObject.has("IDSchemaVersion"))
 					throw new RegBaseCheckedException("IDSchemaVersion not found", "IDSchemaVersion not found");
-				
-				List<UiSchemaDTO> fieldList = identitySchemaService.getUISchema(jsonObject.getDouble("IDSchemaVersion"));	
+
+				List<Field> fieldList = identitySchemaService
+						.getSchemaFields(identitySchemaService.getUISchema(jsonObject.getDouble("IDSchemaVersion")));
 				getRegistrationDtoContent().setIdSchemaVersion(jsonObject.getDouble("IDSchemaVersion"));
-							
-				for(UiSchemaDTO field : fieldList) {
-					if(field.getId().equalsIgnoreCase("IDSchemaVersion"))
+
+				for (Field field : fieldList) {
+					if (field.getId().equalsIgnoreCase("IDSchemaVersion"))
 						continue;
-					
+
 					switch (field.getType()) {
 					case "documentType":
 						DocumentDto documentDto = new DocumentDto();
-						if(jsonObject.has(field.getId()) && jsonObject.get(field.getId()) != null) {
-							JSONObject fieldValue = jsonObject.getJSONObject(field.getId());							
+						if (jsonObject.has(field.getId()) && jsonObject.get(field.getId()) != null) {
+							JSONObject fieldValue = jsonObject.getJSONObject(field.getId());
 							documentDto.setCategory(field.getSubType());
 							documentDto.setOwner("Applicant");
 							documentDto.setFormat(fieldValue.getString("format"));
@@ -269,26 +274,26 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 							getRegistrationDtoContent().addDocument(field.getId(), documentDto);
 						}
 						break;
-						
-					case "biometricsType":						
+
+					case "biometricsType":
 						break;
 
 					default:
 						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
-						if(fieldValue != null) {
-							if(field.getControlType().equalsIgnoreCase("ageDate"))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
+						if (fieldValue != null) {
+							if (field.getControlType().equalsIgnoreCase("ageDate"))
+								getRegistrationDtoContent().setDateField(field.getId(), (String) fieldValue);
 							else
 								getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
 						}
 						break;
 					}
-					
-					if(field.getType() != "documentType" && field.getType() != "biometricsType") {
+
+					if (field.getType() != "documentType" && field.getType() != "biometricsType") {
 						Object fieldValue = getValueFromJson(field.getId(), field.getType(), jsonObject);
-						if(fieldValue != null) {
-							if(field.getControlType().equalsIgnoreCase("ageDate"))
-								getRegistrationDtoContent().setDateField(field.getId(), (String)fieldValue);
+						if (fieldValue != null) {
+							if (field.getControlType().equalsIgnoreCase("ageDate"))
+								getRegistrationDtoContent().setDateField(field.getId(), (String) fieldValue);
 							else
 								getRegistrationDtoContent().getDemographics().put(field.getId(), fieldValue);
 						}
@@ -301,19 +306,22 @@ public class PreRegZipHandlingServiceImpl implements PreRegZipHandlingService {
 			throw new RegBaseCheckedException(REG_IO_EXCEPTION.getErrorCode(), e.getMessage());
 		}
 	}
-	
-	
-	private Object getValueFromJson(String key, String fieldType, JSONObject jsonObject) throws IOException, JSONException {
-		if(!jsonObject.has(key))
+
+	private Object getValueFromJson(String key, String fieldType, JSONObject jsonObject)
+			throws IOException, JSONException {
+		if (!jsonObject.has(key))
 			return null;
-			
+
 		switch (fieldType) {
-		case "string":	return jsonObject.getString(key);
-		case "integer":	return jsonObject.getInt(key);
-		case "number": return jsonObject.getLong(key);
-		case "simpleType": 
-			List<SimpleDto> list = new ArrayList<SimpleDto>(); 
-			for(int i=0;i<jsonObject.getJSONArray(key).length();i++) {
+		case "string":
+			return jsonObject.getString(key);
+		case "integer":
+			return jsonObject.getInt(key);
+		case "number":
+			return jsonObject.getLong(key);
+		case "simpleType":
+			List<SimpleDto> list = new ArrayList<SimpleDto>();
+			for (int i = 0; i < jsonObject.getJSONArray(key).length(); i++) {
 				JSONObject object = jsonObject.getJSONArray(key).getJSONObject(i);
 				list.add(new SimpleDto(object.getString("language"), object.getString("value")));
 			}

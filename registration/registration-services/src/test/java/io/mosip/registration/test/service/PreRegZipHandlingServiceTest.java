@@ -41,17 +41,14 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.DocumentTypeDAO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.PreRegistrationDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.biometric.BiometricDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
-import io.mosip.registration.dto.demographic.ApplicantDocumentDTO;
-import io.mosip.registration.dto.demographic.DemographicDTO;
-import io.mosip.registration.dto.demographic.DemographicInfoDTO;
-import io.mosip.registration.dto.demographic.IndividualIdentity;
+import io.mosip.registration.dto.schema.SchemaDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegBaseUncheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
@@ -87,23 +84,23 @@ public class PreRegZipHandlingServiceTest {
 	@Mock
 	private IdentitySchemaService identitySchemaService;
 	
-	List<UiSchemaDTO> schemaFields = new ArrayList<UiSchemaDTO>();
+	List<Field> schemaFields = new ArrayList<Field>();
 
 	@Before
 	public void init() throws Exception {
 		createRegistrationDTOObject();
 		
-		UiSchemaDTO field1 = new UiSchemaDTO();
+		Field field1 = new Field();
 		field1.setId("fullName");
 		field1.setType("simpleType");
 		schemaFields.add(field1);
 		
-		UiSchemaDTO field2 = new UiSchemaDTO();
+		Field field2 = new Field();
 		field2.setId("gender");
 		field2.setType("simpleType");
 		schemaFields.add(field2);		
 		
-		UiSchemaDTO field3 = new UiSchemaDTO();
+		Field field3 = new Field();
 		field3.setId("postalCode");
 		field3.setType("string");
 		schemaFields.add(field3);
@@ -130,7 +127,9 @@ public class PreRegZipHandlingServiceTest {
 			return "Success";
 		}).when(idObjectValidator).validateIdObject(Mockito.any(), Mockito.any());*/
 		Mockito.when(documentTypeDAO.getDocTypeByName(Mockito.anyString())).thenReturn(new ArrayList<>());
-		Mockito.when(identitySchemaService.getLatestEffectiveUISchema()).thenReturn(schemaFields);
+		SchemaDTO schema = new SchemaDTO();
+		Mockito.when(identitySchemaService.getUISchema(Mockito.anyDouble())).thenReturn(schema);
+		Mockito.when(identitySchemaService.getSchemaFields(schema)).thenReturn(schemaFields);
 		
 		RegistrationDTO registrationDTO = preRegZipHandlingServiceImpl.extractPreRegZipFile(preRegPacket);
 
@@ -153,7 +152,9 @@ public class PreRegZipHandlingServiceTest {
 				return "Success";
 			}).when(idObjectValidator).validateIdObject(Mockito.any(), Mockito.any());*/
 			Mockito.when(documentTypeDAO.getDocTypeByName(Mockito.anyString())).thenReturn(new ArrayList<>());
-			Mockito.when(identitySchemaService.getLatestEffectiveUISchema()).thenReturn(schemaFields);
+			SchemaDTO schema = new SchemaDTO();
+			Mockito.when(identitySchemaService.getUISchema(Mockito.anyDouble())).thenReturn(schema);
+			Mockito.when(identitySchemaService.getSchemaFields(schema)).thenReturn(schemaFields);
 			preRegZipHandlingServiceImpl.extractPreRegZipFile(byteArrayOutputStream.toByteArray());
 		}
 	}

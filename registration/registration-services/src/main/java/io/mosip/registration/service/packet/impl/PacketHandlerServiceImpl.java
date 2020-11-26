@@ -59,16 +59,16 @@ import io.mosip.registration.dao.AuditLogControlDAO;
 import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.RegistrationDAO;
 import io.mosip.registration.dto.ErrorResponseDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.RegistrationCenterDetailDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.packetmanager.metadata.BiometricsMetaInfoDto;
 import io.mosip.registration.dto.packetmanager.metadata.DocumentMetaInfoDTO;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.response.UiSchemaDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.exception.RegistrationExceptionConstants;
 import io.mosip.registration.mdm.service.impl.MosipDeviceSpecificationFactory;
@@ -172,24 +172,20 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			return responseDTO;
 		}
 
-		try {
-
-			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Fetching schema started");
-			SchemaDto schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
-			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Fetching schema completed");
+		try {			
 			// packetCreator.initialize();
 
 			Map<String, String> metaInfoMap = new LinkedHashMap<>();
 
 			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding demographics to packet manager");
-			setDemographics(registrationDTO, schema);
+			setDemographics(registrationDTO);
 
 			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding Documents to packet manager");
 
 			setDocuments(registrationDTO, metaInfoMap);
 			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding Biometrics to packet manager");
 
-			setBiometrics(registrationDTO, schema, metaInfoMap);
+			setBiometrics(registrationDTO, metaInfoMap);
 
 			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID,
 					"Adding officer Biometrics to packet manager");
@@ -215,6 +211,12 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 			packetWriter.addMetaInfo(registrationDTO.getRegistrationId(), metaInfoMap, source.toUpperCase(),
 					registrationDTO.getRegistrationCategory().toUpperCase());
+			
+			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Fetching schema started");
+			
+			UiSchemaDTO schema = identitySchemaService.getIdentitySchema(registrationDTO.getIdSchemaVersion());
+			
+			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Fetching schema completed");
 
 			LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID,
 					"Requesting packet manager to persist packet");
@@ -430,7 +432,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 	}
 
-	private void setDemographics(RegistrationDTO registrationDTO, SchemaDto schema) throws RegBaseCheckedException {
+	private void setDemographics(RegistrationDTO registrationDTO) throws RegBaseCheckedException {
 		Map<String, Object> demographics = registrationDTO.getDemographics();
 
 		for (String fieldName : demographics.keySet()) {
@@ -463,7 +465,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 			}
 		}
 
-		String printingNameFieldId = getPrintingNameFieldName(schema);
+		String printingNameFieldId = getPrintingNameFieldName();
 		LOGGER.info(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID,
 				"printingNameFieldId >>>>> " + printingNameFieldId);
 		if (demographics.get(printingNameFieldId) != null && registrationDTO.getUpdatableFields() != null
@@ -502,12 +504,12 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		metaInfoMap.put("documents", getJsonString(documentMetaInfoDTOs));
 	}
 
-	private void setBiometrics(RegistrationDTO registrationDTO, SchemaDto schema, Map<String, String> metaInfoMap)
+	private void setBiometrics(RegistrationDTO registrationDTO, Map<String, String> metaInfoMap)
 			throws RegBaseCheckedException {
 
 		LOGGER.debug(LOG_PKT_HANLDER, APPLICATION_NAME, APPLICATION_ID, "Adding biometrics to packet manager ");
 
-		List<UiSchemaDTO> biometricFields = schema.getSchema().stream()
+		List<Field> biometricFields = identitySchemaService.getSchemaFields().stream()
 				.filter(field -> PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
 						&& field.getSubType() != null && field.getBioAttributes() != null)
 				.collect(Collectors.toList());
@@ -524,7 +526,7 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 
 		Map<String, Map<String, Object>> exceptionSubTypeMap = new LinkedHashMap<>();
 
-		for (UiSchemaDTO biometricField : biometricFields) {
+		for (Field biometricField : biometricFields) {
 			// List<BiometricsDto> list = new ArrayList<>();
 			// List<BiometricsException> exceptionList = new ArrayList<>();
 
@@ -656,8 +658,8 @@ public class PacketHandlerServiceImpl extends BaseService implements PacketHandl
 		// this.packetCreator.setRegisteredDeviceDetails(capturedRegisteredDevices);
 	}
 
-	private String getPrintingNameFieldName(SchemaDto schema) {
-		Optional<UiSchemaDTO> result = schema.getSchema().stream()
+	private String getPrintingNameFieldName() throws RegBaseCheckedException {
+		Optional<Field> result = identitySchemaService.getSchemaFields().stream()
 				.filter(field -> field.getSubType() != null && field.getSubType().equals("name")).findFirst();
 
 		if (result.isPresent() && result.get() != null)

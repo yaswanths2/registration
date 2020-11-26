@@ -58,7 +58,7 @@ import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
@@ -519,9 +519,9 @@ public class BiometricsController extends BaseController /* implements Initializ
 							LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 									"Group is active : " + group.getName());
 
-							List<UiSchemaDTO> list = group.getFields();
+							List<Field> list = group.getFields();
 
-							for (UiSchemaDTO schemaField : list) {
+							for (Field schemaField : list) {
 								if (schemaField.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
 									getMapOfbiometricSubtypes().put(schemaField.getSubType(),
 											schemaField.getLabel().get("primary"));

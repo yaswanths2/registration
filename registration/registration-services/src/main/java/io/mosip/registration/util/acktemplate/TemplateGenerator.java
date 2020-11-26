@@ -50,10 +50,10 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dto.ErrorResponseDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -156,7 +156,7 @@ public class TemplateGenerator extends BaseService {
 			String documentDisableFlag = String
 					.valueOf(ApplicationContext.map().get(RegistrationConstants.DOC_DISABLE_FLAG));
 
-			List<UiSchemaDTO> schemaFields = getSchemaFields(registration.getIdSchemaVersion());
+			List<Field> schemaFields = getSchemaFields(registration.getIdSchemaVersion());
 
 			boolean isAckTemplate = false;
 
@@ -248,15 +248,14 @@ public class TemplateGenerator extends BaseService {
 				applicationLanguageProperties.getString("importantguidelines"));
 	}
 
-	private Map<String, List<BiometricsDto>> getBiometricsFields(RegistrationDTO registration,
-			List<UiSchemaDTO> fields) {
+	private Map<String, List<BiometricsDto>> getBiometricsFields(RegistrationDTO registration, List<Field> fields) {
 		Map<String, List<BiometricsDto>> biometricDetails = new HashMap<>();
-		List<UiSchemaDTO> biometricFields = fields.stream()
+		List<Field> biometricFields = fields.stream()
 				.filter(field -> PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
 						&& field.getSubType() != null && field.getBioAttributes() != null)
 				.collect(Collectors.toList());
 
-		for (UiSchemaDTO biometricField : biometricFields) {
+		for (Field biometricField : biometricFields) {
 			List<BiometricsDto> list = new ArrayList<>();
 			List<BiometricsDto> exceptionList = new ArrayList<>();
 			for (String attribute : biometricField.getBioAttributes()) {
@@ -280,7 +279,7 @@ public class TemplateGenerator extends BaseService {
 	}
 
 	private void setUpBiometricData(Map<String, Object> templateValues, RegistrationDTO registration,
-			ResourceBundle applicationLanguageProperties, List<UiSchemaDTO> fields, ResponseDTO response,
+			ResourceBundle applicationLanguageProperties, List<Field> fields, ResponseDTO response,
 			boolean isAckTemplate) {
 		Map<String, List<BiometricsDto>> biometricDetails = getBiometricsFields(registration, fields);
 
@@ -312,9 +311,10 @@ public class TemplateGenerator extends BaseService {
 				continue;
 
 			Map<String, Object> fieldTemplateValues = new HashMap<String, Object>();
-			UiSchemaDTO field = fields.stream().filter(f -> f.getId().equals(fieldId)).findFirst().get();
+			Field field = fields.stream().filter(f -> f.getId().equals(fieldId)).findFirst().get();
 			fieldTemplateValues.put("BiometricsFieldPrimLabel", field.getLabel().get("primary"));
-			fieldTemplateValues.put("BiometricsFieldSecLabel", isLocalLanguageAvailable() ? field.getLabel().get("secondary") : RegistrationConstants.EMPTY);
+			fieldTemplateValues.put("BiometricsFieldSecLabel",
+					isLocalLanguageAvailable() ? field.getLabel().get("secondary") : RegistrationConstants.EMPTY);
 
 			List<BiometricsDto> dataCaptured = biometricDetails.get(fieldId);
 
@@ -793,7 +793,7 @@ public class TemplateGenerator extends BaseService {
 
 	@SuppressWarnings("unchecked")
 	private void setUpDemographicInfo(RegistrationDTO registration, Map<String, Object> templateValues,
-			ResourceBundle applicationLanguageProperties, List<UiSchemaDTO> schemaFields) {
+			ResourceBundle applicationLanguageProperties, List<Field> schemaFields) {
 
 		String platformLanguageCode = ApplicationContext.applicationLanguage();
 		String localLanguageCode = ApplicationContext.localLanguage();
@@ -831,7 +831,8 @@ public class TemplateGenerator extends BaseService {
 				templateValues.put(RegistrationConstants.TEMPLATE_APPLICANT_NAME_SECONDARY_VALUE,
 						RegistrationConstants.EMPTY);
 			} else {
-				templateValues.put(RegistrationConstants.TEMPLATE_APPLICANT_NAME_SECONDARY_VALUE, applicantNameLocalLanguage.toString());
+				templateValues.put(RegistrationConstants.TEMPLATE_APPLICANT_NAME_SECONDARY_VALUE,
+						applicantNameLocalLanguage.toString());
 			}
 		} else {
 			templateValues.put("DisplayName", RegistrationConstants.TEMPLATE_STYLE_HIDE_PROPERTY);
@@ -844,7 +845,7 @@ public class TemplateGenerator extends BaseService {
 
 		List<Map<String, Object>> demographicsdata = new ArrayList<Map<String, Object>>();
 
-		for (UiSchemaDTO field : schemaFields) {
+		for (Field field : schemaFields) {
 			if ("biometricsType".equals(field.getType()) || "documentType".equals(field.getType())
 					|| "UIN".equalsIgnoreCase(field.getId()) || "IDSchemaVersion".equalsIgnoreCase(field.getId()))
 				continue;
@@ -853,12 +854,15 @@ public class TemplateGenerator extends BaseService {
 			String value = getValue(registration.getDemographics().get(field.getId()));
 			if (value != null || !value.isEmpty() || !"".equals(value)) {
 				data.put("primaryLabel", field.getLabel().get("primary"));
-				data.put("secondaryLabel", field.getLabel().containsKey("secondary") && isLocalLanguageAvailable() ? field.getLabel().get("secondary")
-						: RegistrationConstants.EMPTY);
+				data.put("secondaryLabel",
+						field.getLabel().containsKey("secondary") && isLocalLanguageAvailable()
+								? field.getLabel().get("secondary")
+								: RegistrationConstants.EMPTY);
 				data.put("primaryValue", getValueForTemplate(value, platformLanguageCode));
 				String secondaryVal = getSecondaryLanguageValue(registration.getDemographics().get(field.getId()),
 						localLanguageCode);
-				data.put("secondaryValue", secondaryVal != null && !secondaryVal.isEmpty() ? "/" + secondaryVal : secondaryVal);
+				data.put("secondaryValue",
+						secondaryVal != null && !secondaryVal.isEmpty() ? "/" + secondaryVal : secondaryVal);
 				demographicsdata.add(data);
 			}
 		}
@@ -1109,10 +1113,10 @@ public class TemplateGenerator extends BaseService {
 		return value;
 	}
 
-	private List<UiSchemaDTO> getSchemaFields(double idVersion) throws RegBaseCheckedException {
-		List<UiSchemaDTO> schemaFields;
+	private List<Field> getSchemaFields(double idVersion) throws RegBaseCheckedException {
+		List<Field> schemaFields;
 		try {
-			schemaFields = identitySchemaServiceImpl.getUISchema(idVersion);
+			schemaFields = identitySchemaServiceImpl.getSchemaFields(identitySchemaServiceImpl.getUISchema(idVersion));
 		} catch (RegBaseCheckedException e) {
 			throw e;
 		}
@@ -1122,13 +1126,13 @@ public class TemplateGenerator extends BaseService {
 	private boolean isLocalLanguageAvailable() {
 		String platformLanguageCode = ApplicationContext.applicationLanguage();
 		String localLanguageCode = ApplicationContext.localLanguage();
-		
+
 		if (localLanguageCode != null && !localLanguageCode.isEmpty()) {
 			if (!platformLanguageCode.equalsIgnoreCase(localLanguageCode)) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 }

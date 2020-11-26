@@ -41,7 +41,7 @@ import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.controller.device.ScanPopUpViewController;
 import io.mosip.registration.device.scanner.dto.ScanDevice;
 import io.mosip.registration.device.webcam.impl.WebcamSarxosServiceImpl;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
 import io.mosip.registration.dto.schema.Group;
@@ -381,14 +381,14 @@ public class DocumentScanController extends BaseController {
 							"Found groups for documents in screen : " + screen.getName());
 
 					for (Group group : groups) {
-						List<UiSchemaDTO> documentFields = group.getFields();
+						List<Field> documentFields = group.getFields();
 
 						if (documentFields != null && !documentFields.isEmpty()) {
 
 							LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, APPLICATION_NAME,
 									RegistrationConstants.APPLICATION_ID, "Found Fields for documents in screen : "
 											+ screen.getName() + " in group : " + group.getName());
-							for (UiSchemaDTO documentCategory : documentFields) {
+							for (Field documentCategory : documentFields) {
 
 								LOGGER.debug(RegistrationConstants.DOCUMNET_SCAN_CONTROLLER, APPLICATION_NAME,
 										RegistrationConstants.APPLICATION_ID,
@@ -1387,9 +1387,9 @@ public class DocumentScanController extends BaseController {
 		biometricExceptionReq.setText(exceptionFaceDescription);
 	}
 
-	private List<UiSchemaDTO> getDocId() {
-
-		return validation.getValidationMap().entrySet().stream()
+	private List<Field> getDocId() {
+		//TODO - need to be removed
+		return getUiSchemaFieldMap().entrySet().stream()
 				.filter(map -> map.getValue().getType().equalsIgnoreCase("documentType")).map(m -> m.getValue())
 				.collect(Collectors.toList());
 
