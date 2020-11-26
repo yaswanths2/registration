@@ -1,5 +1,6 @@
 package io.mosip.registration.dto.schema;
 
+import java.util.HashMap;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class Screen {
 
 	private String name;
-	private List<String> title;
+	private HashMap<String, String> title;
 	private int order;
 
 	@JsonProperty("css-class")

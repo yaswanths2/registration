@@ -5,8 +5,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.mosip.registration.dto.RequiredOnExpr;
 import io.mosip.registration.dto.UiSchemaDTO;
-import io.mosip.registration.dto.Validator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +23,7 @@ public class Group {
 	@JsonProperty("css-class")
 	private String cssClass;
 	
-	private Validator visible;
+	private RequiredOnExpr visible;
 	private boolean enabled;
 	private int order;
 	private List<UiSchemaDTO> fields;
