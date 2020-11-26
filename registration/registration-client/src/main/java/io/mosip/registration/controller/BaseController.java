@@ -225,8 +225,8 @@ public class BaseController {
 	private List<UiSchemaDTO> uiSchemaDTOs;
 
 	private static Map<String, UiSchemaDTO> validationMap;
-	
-	private static Map<String, io.mosip.registration.dto.schema.Screen> latestValidationMap;
+
+	private static Map<String, List<io.mosip.registration.dto.schema.Screen>> latestValidationMap;
 
 	private static TreeMap<String, String> mapOfbiometricSubtypes = new TreeMap<>();
 
@@ -273,21 +273,21 @@ public class BaseController {
 	public void setValidations(Map<String, UiSchemaDTO> validations) {
 		validationMap = validations;
 	}
-	
+
 	/**
 	 * Set Latest Validations map
 	 * 
 	 * @param validations is a map id's and regex validations
 	 */
-	public void setLatestValidations(Map<String, io.mosip.registration.dto.schema.Screen> validations) {
+	public void setLatestValidations(Map<String, List<io.mosip.registration.dto.schema.Screen>> validations) {
 		latestValidationMap = validations;
 	}
 
 	public Map<String, UiSchemaDTO> getValidationMap() {
 		return validationMap;
 	}
-	
-	public Map<String, io.mosip.registration.dto.schema.Screen> getLatestValidationMap() {
+
+	public Map<String, List<io.mosip.registration.dto.schema.Screen>> getLatestValidationMap() {
 		return latestValidationMap;
 	}
 
@@ -1581,18 +1581,26 @@ public class BaseController {
 					ExceptionUtils.getStackTrace(e));
 		}
 	}
-	
+
 	public void loadUIElementsFromLatestSchema() {
 		try {
 			SchemaDTO schema = identitySchemaService.getLatestUISchema();
 			Map<String, io.mosip.registration.dto.schema.Screen> validationsMap = new LinkedHashMap<>();
 			for (io.mosip.registration.dto.schema.Screen screen : schema.getScreens()) {
-				validationsMap.put(screen.getName(), screen);
+
+				List<io.mosip.registration.dto.schema.Screen> screenList = new LinkedList<>();
+
+				if (validationsMap.containsKey(screen.getName()) && validationsMap.get(screen.getName()) != null) {
+
+					screenList = latestValidationMap.get(screen.getName());
+				}
+				screenList.add(screen);
+				latestValidationMap.put(screen.getName(), screenList);
 //				if (screen.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
 //					mapOfbiometricSubtypes.put(schemaField.getSubType(), schemaField.getLabel().get("primary"));
 //				}
 			}
-			validations.setLatestValidations(validationsMap); // Set Validations Map
+			validations.setLatestValidations(latestValidationMap); // Set Validations Map
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(e));
@@ -1894,11 +1902,11 @@ public class BaseController {
 				.filter(schemaDto -> schemaDto.getGroup() != null && schemaDto.getGroup().equalsIgnoreCase(group))
 				.collect(Collectors.toList());
 	}
-	
+
 	public List<io.mosip.registration.dto.schema.Screen> getScreens(String screenName) {
 
 		// TODO get UiSchemaDTO
-		List<io.mosip.registration.dto.schema.Screen> screens = null;
+		List<io.mosip.registration.dto.schema.Screen> screens = latestValidationMap.get(screenName);
 
 		return screens;
 	}

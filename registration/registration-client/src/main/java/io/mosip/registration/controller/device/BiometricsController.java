@@ -62,6 +62,8 @@ import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
+import io.mosip.registration.dto.schema.Group;
+import io.mosip.registration.dto.schema.Screen;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.Biometric;
@@ -377,6 +379,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 		LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"populateBiometricPage invoked, isUserOnboard : " + isUserOnboard);
 
+		setBiometricsSubTypesMap();
+
 		isUserOnboardFlag = isUserOnboard;
 		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = isUserOnboardFlag
 				? getOnboardUserMap()
@@ -489,6 +493,46 @@ public class BiometricsController extends BaseController /* implements Initializ
 		}
 
 		initializeState(isGoingBack);
+	}
+
+	private void setBiometricsSubTypesMap() {
+		List<Screen> screens = getScreens(RegistrationConstants.GUARDIAN_BIOMETRIC);
+
+		if (screens != null && !screens.isEmpty()) {
+
+			for (Screen screen : screens) {
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Started screen : " + screen.getName());
+
+				
+				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
+
+					for (Group group : screen.getGroups()) {
+
+						LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+								"Verifying group : " + group.getName());
+
+						// TODO Find group is visible or not
+						boolean isVisible = true;
+
+						if (isVisible && group.getFields() != null && !group.getFields().isEmpty()) {
+							LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+									"Group is active : " + group.getName());
+
+							List<UiSchemaDTO> list = group.getFields();
+
+							for (UiSchemaDTO schemaField : list) {
+								if (schemaField.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
+									getMapOfbiometricSubtypes().put(schemaField.getSubType(),
+											schemaField.getLabel().get("primary"));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
 	}
 
 	private VBox getExceptionImageVBox(String modality, String key, Object object) {
