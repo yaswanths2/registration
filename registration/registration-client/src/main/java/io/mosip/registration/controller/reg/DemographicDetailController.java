@@ -176,6 +176,7 @@ public class DemographicDetailController extends BaseController {
 	// public Map<String, ComboBox<String>> listOfComboBoxWithString;
 	public Map<String, ComboBox<GenericDto>> listOfComboBoxWithObject;
 	public Map<String, List<Button>> listOfButtons;
+	public Map<String, GridPane> listOfScreenGridPanes = new LinkedHashMap<>();
 	public Map<String, TextField> listOfTextField;
 	private int age = 0;
 	@Autowired
@@ -2186,7 +2187,7 @@ public class DemographicDetailController extends BaseController {
 				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
 
 					GridPane screenGridPane = (GridPane) getScreenNode(screen.getName(), screen.getOrder());
-
+					listOfScreenGridPanes.put(screenGridPane.getId(), screenGridPane);
 					parentFlowPane.getChildren().add(screenGridPane);
 					for (Group group : screen.getGroups()) {
 
