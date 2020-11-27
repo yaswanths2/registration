@@ -504,7 +504,6 @@ public class BiometricsController extends BaseController /* implements Initializ
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Started screen : " + screen.getName());
 
-				
 				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
 
 					for (Group group : screen.getGroups()) {
@@ -1644,8 +1643,10 @@ public class BiometricsController extends BaseController /* implements Initializ
 			return;
 		}
 
-		registrationController.showCurrentPage(RegistrationConstants.GUARDIAN_BIOMETRIC,
-				getPageByAction(RegistrationConstants.GUARDIAN_BIOMETRIC, RegistrationConstants.PREVIOUS));
+		String prevScreen = pageFlow.getCurrentScreenName();
+
+		pageFlow.updatePrevious();
+		registrationController.showCurrentPage(prevScreen, pageFlow.getCurrentScreenName());
 
 	}
 

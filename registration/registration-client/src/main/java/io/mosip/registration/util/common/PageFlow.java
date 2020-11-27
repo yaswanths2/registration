@@ -36,7 +36,23 @@ public class PageFlow {
 
 	private static Map<String, Map<String, Boolean>> onBoardingPageFlowMap;
 
-	private int currentScreenNumber;
+	private int currentScreenNumber = 1;
+
+	private int previousScreenNumber = 1;
+
+	public int getPreviousScreenNumber() {
+		return previousScreenNumber;
+	}
+
+	public int getCurrentScreenNumber() {
+		return currentScreenNumber;
+	}
+
+	public void setCurrentScreenNumber(int currentScreenNumber) {
+		this.currentScreenNumber = currentScreenNumber;
+		this.previousScreenNumber = currentScreenNumber;
+	}
+
 	private static TreeMap<Integer, String> uiSchemaPageFlow = new TreeMap<Integer, String>();
 
 	public static Map<Integer, String> getUiSchemaPageFlow() {
@@ -47,12 +63,27 @@ public class PageFlow {
 
 		String screenName = "";
 
-		Integer nextScreen = uiSchemaPageFlow.ceilingKey(currentScreenNumber);
-		screenName = uiSchemaPageFlow.get(nextScreen);
+//		Integer nextScreen = uiSchemaPageFlow.ceilingKey(currentScreenNumber);
+		screenName = uiSchemaPageFlow.get(currentScreenNumber);
 		if (screenName != null) {
-			currentScreenNumber = nextScreen;
+//
+//			previousScreenNumber = currentScreenNumber;
+//			++currentScreenNumber;
 		}
 		return screenName;
+
+	}
+
+	public void updateNext() {
+		previousScreenNumber = currentScreenNumber;
+		++currentScreenNumber;
+
+	}
+
+	public void updatePrevious() {
+
+		currentScreenNumber = previousScreenNumber;
+		--previousScreenNumber;
 
 	}
 
@@ -65,10 +96,10 @@ public class PageFlow {
 	public String getPreviousScreenName() {
 		String screenName = "";
 
-		Integer previousScreen = uiSchemaPageFlow.floorKey(currentScreenNumber);
-		screenName = uiSchemaPageFlow.get(previousScreen);
+		screenName = uiSchemaPageFlow.get(previousScreenNumber);
 		if (screenName != null) {
-			currentScreenNumber = previousScreen;
+//			currentScreenNumber = previousScreenNumber;
+//			--previousScreenNumber;
 		}
 		return screenName;
 	}

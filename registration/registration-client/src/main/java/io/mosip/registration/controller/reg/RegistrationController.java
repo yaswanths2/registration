@@ -30,6 +30,7 @@ import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
@@ -102,6 +103,8 @@ public class RegistrationController extends BaseController {
 				prepareEditPageContent();
 			}
 			uinUpdate();
+
+			pageFlow.setCurrentScreenNumber(1);
 
 			showCurrentPage(null, pageFlow.getNextScreenName());
 
@@ -428,12 +431,23 @@ public class RegistrationController extends BaseController {
 	 * This method will determine the current page
 	 */
 	public void showCurrentPage(String notTosShow, String show) {
-
 		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Navigating to next page based on the current page");
 
 		getCurrentPage(registrationId, notTosShow, show);
 
+		Node previousNode = getNode(notTosShow, pageFlow.getPreviousScreenNumber());
+
+		if (previousNode != null) {
+			previousNode.setVisible(false);
+			previousNode.setManaged(false);
+		}
+		Node currentNode = getNode(show, pageFlow.getCurrentScreenNumber());
+
+		if (currentNode != null) {
+			currentNode.setVisible(true);
+			currentNode.setManaged(true);
+		}
 		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Navigated to next page based on the current page");
 	}

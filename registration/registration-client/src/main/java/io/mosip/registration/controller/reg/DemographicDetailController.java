@@ -269,21 +269,6 @@ public class DemographicDetailController extends BaseController {
 
 			initializeDemoScreens(position);
 
-			List<Screen> demographicScreens = getScreens(RegistrationConstants.DEMOGRAPHIC_DETAIL);
-
-			
-			//TODO Remove
-			if (demographicScreens != null && !demographicScreens.isEmpty()) {
-
-				Screen screen = demographicScreens.get(0);
-
-				Node node = getNode(screen.getName(), screen.getOrder());
-
-				node.setVisible(true);
-				node.setManaged(true);
-
-			}
-
 			populateDropDowns();
 			for (Entry<String, List<String>> orderOfAdd : orderOfAddressListByGroup.entrySet()) {
 				List<String> orderOfAddress = orderOfAdd.getValue();
@@ -1591,6 +1576,8 @@ public class DemographicDetailController extends BaseController {
 	@FXML
 	private void back() {
 		try {
+
+			// TODO add back button feature
 			if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
 				Parent uinUpdate = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE));
 				getScene(uinUpdate);
@@ -1631,8 +1618,11 @@ public class DemographicDetailController extends BaseController {
 			auditFactory.audit(AuditEvent.REG_DEMO_NEXT, Components.REG_DEMO_DETAILS, SessionContext.userId(),
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			
-			registrationController.showCurrentPage(pageFlow.getCurrentScreenName(), pageFlow.getNextScreenName());
+			String prevScreen = pageFlow.getCurrentScreenName();
+
+			pageFlow.updateNext();
+			registrationController.showCurrentPage(prevScreen, pageFlow.getNextScreenName());
+
 //			
 //			registrationController.showCurrentPage(RegistrationConstants.DEMOGRAPHIC_DETAIL,
 //					getPageByAction(RegistrationConstants.DEMOGRAPHIC_DETAIL, RegistrationConstants.NEXT));

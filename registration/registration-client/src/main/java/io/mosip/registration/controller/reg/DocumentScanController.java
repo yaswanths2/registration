@@ -1294,8 +1294,10 @@ public class DocumentScanController extends BaseController {
 		auditFactory.audit(AuditEvent.REG_DOC_BACK, Components.REG_DOCUMENTS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		registrationController.showCurrentPage(RegistrationConstants.DOCUMENT_SCAN,
-				getPageByAction(RegistrationConstants.DOCUMENT_SCAN, RegistrationConstants.PREVIOUS));
+		String prevScreen = pageFlow.getCurrentScreenName();
+
+		pageFlow.updatePrevious();
+		registrationController.showCurrentPage(prevScreen, pageFlow.getCurrentScreenName());
 	}
 
 	/**
@@ -1305,9 +1307,10 @@ public class DocumentScanController extends BaseController {
 	private void next() {
 		auditFactory.audit(AuditEvent.REG_DOC_NEXT, Components.REG_DOCUMENTS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
+		String prevScreen = pageFlow.getCurrentScreenName();
 
-		registrationController.showCurrentPage(RegistrationConstants.DOCUMENT_SCAN,
-				getPageByAction(RegistrationConstants.DOCUMENT_SCAN, RegistrationConstants.NEXT));
+		pageFlow.updateNext();
+		registrationController.showCurrentPage(prevScreen, pageFlow.getNextScreenName());
 
 		guardianBiometricsController.populateBiometricPage(false, false);
 		/*
@@ -1388,7 +1391,7 @@ public class DocumentScanController extends BaseController {
 	}
 
 	private List<Field> getDocId() {
-		//TODO - need to be removed
+		// TODO - need to be removed
 		return getUiSchemaFieldMap().entrySet().stream()
 				.filter(map -> map.getValue().getType().equalsIgnoreCase("documentType")).map(m -> m.getValue())
 				.collect(Collectors.toList());
