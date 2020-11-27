@@ -1631,8 +1631,11 @@ public class DemographicDetailController extends BaseController {
 			auditFactory.audit(AuditEvent.REG_DEMO_NEXT, Components.REG_DEMO_DETAILS, SessionContext.userId(),
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-			registrationController.showCurrentPage(RegistrationConstants.DEMOGRAPHIC_DETAIL,
-					getPageByAction(RegistrationConstants.DEMOGRAPHIC_DETAIL, RegistrationConstants.NEXT));
+			
+			registrationController.showCurrentPage(pageFlow.getCurrentScreenName(), pageFlow.getNextScreenName());
+//			
+//			registrationController.showCurrentPage(RegistrationConstants.DEMOGRAPHIC_DETAIL,
+//					getPageByAction(RegistrationConstants.DEMOGRAPHIC_DETAIL, RegistrationConstants.NEXT));
 
 		}
 	}
