@@ -334,7 +334,6 @@ public class DemographicDetailController extends BaseController {
 
 		addGroupContent(subList, groupGridPane);
 
-		parentFlow.add(groupGridPane);
 		position++;
 		positionTracker.put(groupGridPane.getId(), position);
 	}
@@ -2180,7 +2179,8 @@ public class DemographicDetailController extends BaseController {
 			for (Screen screen : screens) {
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Started screen : " + screen.getName());
-
+				int screen_row_index = 0;
+				int screen_column_index = 0;
 				// TODO Get All Screens Group Fields
 
 				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
@@ -2193,11 +2193,16 @@ public class DemographicDetailController extends BaseController {
 						LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 								"Verifying group : " + group.getName());
 
+						int group_row_index = 0;
+						int group_column_index = 0;
 						// TODO Find group is visible or not
 						boolean isVisible = true;
-						GridPane groupGridPane = (GridPane) getScreenNode(group.getName(), group.getOrder());
+						GridPane groupGridPane = new GridPane();
+						groupGridPane.setId(group.getName() + group.getOrder());
 
-						screenGridPane.getChildren().add(groupGridPane);
+						screenGridPane.add(groupGridPane, screen_column_index, screen_row_index);
+
+						screen_row_index++;
 
 						if (isVisible && group.getFields() != null && !group.getFields().isEmpty()) {
 							LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -2211,10 +2216,15 @@ public class DemographicDetailController extends BaseController {
 							} else {
 								for (int index = 0; index <= list.size() / 4; index++) {
 
+									//TODO temporary fix
+									GridPane subGridPane = new GridPane();
+
 									int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4)
 											: list.size();
 									List<Field> subList = list.subList(index * 4, toIndex);
-									addGroupInUI(subList, position, groupGridPane);
+									addGroupInUI(subList, position, subGridPane);
+									
+									groupGridPane.add(subGridPane, group_column_index, index);
 
 								}
 							}
