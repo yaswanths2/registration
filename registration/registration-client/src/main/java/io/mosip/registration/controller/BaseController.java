@@ -245,6 +245,8 @@ public class BaseController {
 
 	private static TreeMap<String, String> mapOfbiometricSubtypes = new TreeMap<>();
 
+	private static Map<String, TreeMap<Integer, Node>> screenNodeMap = new LinkedHashMap<String, TreeMap<Integer, Node>>();
+
 	// private static List<String> listOfBiometricSubTypes = new ArrayList<>();
 
 	/*
@@ -1937,5 +1939,28 @@ public class BaseController {
 			}
 		}
 		return node;
+	}
+
+	public Map<String, TreeMap<Integer, Node>> getScreenNodeMap() {
+		return screenNodeMap;
+	}
+
+	public void setScreenNodeMap(Map<String, TreeMap<Integer, Node>> screenNodeMap) {
+		this.screenNodeMap = screenNodeMap;
+	}
+
+	public void addScreenMap(String screenName, int order, Node node) {
+
+		TreeMap<Integer, Node> screenNode = screenNodeMap.get(screenName);
+
+		if (screenNode == null) {
+			screenNode = new TreeMap<Integer, Node>();
+
+		}
+
+		screenNode.put(order, node);
+
+		screenNodeMap.put(screenName, screenNode);
+
 	}
 }
