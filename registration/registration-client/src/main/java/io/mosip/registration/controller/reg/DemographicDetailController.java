@@ -268,31 +268,21 @@ public class DemographicDetailController extends BaseController {
 //			for (Entry<String, UiSchemaDTO> entry : validation.getValidationMap().entrySet()) {
 
 			initializeDemoScreens(position);
-//			 templateGroup = getTemplateGroupMap();
-//			for (Entry<String, List<UiSchemaDTO>> templateGroupEntry : templateGroup.entrySet()) {
-//
-//				List<UiSchemaDTO> list = templateGroupEntry.getValue();
-//				if (list.size() <= 4) {
-//					addGroupInUI(list, position, templateGroupEntry.getKey() + position);
-//
-//				} else {
-//					for (int index = 0; index <= list.size() / 4; index++) {
-//
-//						int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4) : list.size();
-//						List<UiSchemaDTO> subList = list.subList(index * 4, toIndex);
-//						addGroupInUI(subList, position, templateGroupEntry.getKey() + position);
-//
-//					}
-//				}
-//
-////					if (isDemographicField(entry.getValue())) {
-////						GridPane mainGridPane = addContent(entry.getValue());
-////						parentFlow.add(mainGridPane);
-////						position++;
-////						positionTracker.put(mainGridPane.getId(), position);
-////					}
-//			}
-//			}
+
+			List<Screen> demographicScreens = getScreens(RegistrationConstants.DEMOGRAPHIC_DETAIL);
+
+			
+			//TODO Remove
+			if (demographicScreens != null && !demographicScreens.isEmpty()) {
+
+				Screen screen = demographicScreens.get(0);
+
+				Node node = getNode(screen.getName(), screen.getOrder());
+
+				node.setVisible(true);
+				node.setManaged(true);
+
+			}
 
 			populateDropDowns();
 			for (Entry<String, List<String>> orderOfAdd : orderOfAddressListByGroup.entrySet()) {
@@ -2187,7 +2177,13 @@ public class DemographicDetailController extends BaseController {
 				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
 
 					GridPane screenGridPane = (GridPane) getScreenNode(screen.getName(), screen.getOrder());
-					listOfScreenGridPanes.put(screenGridPane.getId(), screenGridPane);
+
+					screenGridPane.setVisible(false);
+
+					screenGridPane.setManaged(false);
+
+					addNode(screen.getName(), screen.getOrder(), screenGridPane);
+
 					parentFlowPane.getChildren().add(screenGridPane);
 					for (Group group : screen.getGroups()) {
 
@@ -2217,14 +2213,14 @@ public class DemographicDetailController extends BaseController {
 							} else {
 								for (int index = 0; index <= list.size() / 4; index++) {
 
-									//TODO temporary fix
+									// TODO temporary fix
 									GridPane subGridPane = new GridPane();
 
 									int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4)
 											: list.size();
 									List<Field> subList = list.subList(index * 4, toIndex);
 									addGroupInUI(subList, position, subGridPane);
-									
+
 									groupGridPane.add(subGridPane, group_column_index, index);
 
 								}

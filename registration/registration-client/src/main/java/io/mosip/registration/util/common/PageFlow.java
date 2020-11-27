@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,17 @@ public class PageFlow {
 	private static Map<String, Map<String, Boolean>> regPageFlowMap;
 
 	private static Map<String, Map<String, Boolean>> onBoardingPageFlowMap;
+
+	private int currentScreenNumber = 0;
+	private static Map<Integer, String> uiSchemaPageFlow = new TreeMap<Integer, String>();
+
+	public static Map<Integer, String> getUiSchemaPageFlow() {
+		return uiSchemaPageFlow;
+	}
+
+	public static void setUiSchemaPageFlow(Map<Integer, String> uiSchemaPageFlow) {
+		PageFlow.uiSchemaPageFlow = uiSchemaPageFlow;
+	}
 
 	@Autowired
 	private BaseController baseController;
@@ -73,7 +85,8 @@ public class PageFlow {
 
 		String docType = "documentType";
 		List<Field> docList = null;
-		if(baseController != null && baseController.getUiSchemaFieldMap() != null && !baseController.getUiSchemaFieldMap().isEmpty()) {
+		if (baseController != null && baseController.getUiSchemaFieldMap() != null
+				&& !baseController.getUiSchemaFieldMap().isEmpty()) {
 			docList = baseController.getUiSchemaFieldMap().values().stream()
 					.filter(schemaDto -> schemaDto.getType() != null && schemaDto.getType().equalsIgnoreCase(docType))
 					.collect(Collectors.toList());
@@ -198,8 +211,7 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param currentPage
-	 *            registration page name
+	 * @param currentPage registration page name
 	 * @return returns registration next page name if current page and next page
 	 *         found, else null
 	 */
@@ -213,8 +225,7 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param currentPage
-	 *            registration page name
+	 * @param currentPage registration page name
 	 * @return returns registration previous page name if current page and previous
 	 *         page found, else null
 	 */
@@ -277,12 +288,9 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            page name
-	 * @param key
-	 *            to find attributes such as visibility
-	 * @param val
-	 *            boolean value to say true or false
+	 * @param page page name
+	 * @param key  to find attributes such as visibility
+	 * @param val  boolean value to say true or false
 	 */
 	public void updateOnBoardingMap(String page, String key, boolean val) {
 
@@ -295,12 +303,9 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            page name
-	 * @param key
-	 *            to find attributes such as visibility
-	 * @param val
-	 *            boolean value to say true or false
+	 * @param page page name
+	 * @param key  to find attributes such as visibility
+	 * @param val  boolean value to say true or false
 	 */
 	public void updateRegMap(String page, String key, boolean val) {
 
@@ -313,10 +318,8 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            Registration page Name
-	 * @param attribute
-	 *            attribute in the Registration page
+	 * @param page      Registration page Name
+	 * @param attribute attribute in the Registration page
 	 * @return returns whether visible or not
 	 */
 	public boolean isVisibleInRegFlowMap(String page, String attribute) {
@@ -332,10 +335,8 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            registration page Name
-	 * @param attribute
-	 *            attribute in the onBoard page
+	 * @param page      registration page Name
+	 * @param attribute attribute in the onBoard page
 	 * @return returns whether visible or not
 	 */
 	public boolean isVisibleInOnBoardFlowMap(String page, String attribute) {
@@ -349,4 +350,5 @@ public class PageFlow {
 
 		return isVisible;
 	}
+
 }

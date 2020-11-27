@@ -1577,9 +1577,12 @@ public class BaseController {
 			Map<String, io.mosip.registration.dto.schema.Screen> validationsMap = new LinkedHashMap<>();
 			for (io.mosip.registration.dto.schema.Screen screen : schema.getScreens()) {
 
+				PageFlow.getUiSchemaPageFlow().put(screen.getOrder(), screen.getName());
+
 				List<io.mosip.registration.dto.schema.Screen> screenList = new LinkedList<>();
 
-				if (validationsMap.containsKey(screen.getName()) && validationsMap.get(screen.getName()) != null) {
+				if (uiSchemaScreenMap.containsKey(screen.getName())
+						&& uiSchemaScreenMap.get(screen.getName()) != null) {
 					screenList = uiSchemaScreenMap.get(screen.getName());
 				}
 				screenList.add(screen);
@@ -1945,11 +1948,7 @@ public class BaseController {
 		return screenNodeMap;
 	}
 
-	public void setScreenNodeMap(Map<String, TreeMap<Integer, Node>> screenNodeMap) {
-		this.screenNodeMap = screenNodeMap;
-	}
-
-	public void addScreenMap(String screenName, int order, Node node) {
+	public void addNode(String screenName, int order, Node node) {
 
 		TreeMap<Integer, Node> screenNode = screenNodeMap.get(screenName);
 
@@ -1962,5 +1961,16 @@ public class BaseController {
 
 		screenNodeMap.put(screenName, screenNode);
 
+	}
+
+	public Node getNode(String screenName, int order) {
+
+		TreeMap<Integer, Node> screenNode = screenNodeMap.get(screenName);
+
+		if (screenNode != null) {
+			return screenNode.get(order);
+
+		}
+		return null;
 	}
 }
