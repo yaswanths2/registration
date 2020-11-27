@@ -330,9 +330,7 @@ public class DemographicDetailController extends BaseController {
 		}
 	}
 
-	private void addGroupInUI(List subList, int position, String gridPaneId) {
-		GridPane groupGridPane = new GridPane();
-		groupGridPane.setId(gridPaneId);
+	private void addGroupInUI(List subList, int position, GridPane groupGridPane) {
 
 		addGroupContent(subList, groupGridPane);
 
@@ -358,10 +356,8 @@ public class DemographicDetailController extends BaseController {
 
 					if (orderOfAddressMapByGroup.containsKey(field.getGroup())) {
 
-						if (!orderOfAddressMapByGroup.get(field.getGroup())
-								.containsKey(location.getHierarchyLevel())) {
-							TreeMap<Integer, String> hirearchyMap = orderOfAddressMapByGroup
-									.get(field.getGroup());
+						if (!orderOfAddressMapByGroup.get(field.getGroup()).containsKey(location.getHierarchyLevel())) {
+							TreeMap<Integer, String> hirearchyMap = orderOfAddressMapByGroup.get(field.getGroup());
 							hirearchyMap.put(location.getHierarchyLevel(), field.getId());
 
 							orderOfAddressMapByGroup.put(field.getGroup(), hirearchyMap);
@@ -1945,8 +1941,8 @@ public class DemographicDetailController extends BaseController {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void refreshDemographicGroups(Map<String, Object> mvelDataMap) {
-		//TODO - Add loggers
-		//TODO - remove demo/doc/biometrics from session, if mvel says not required
+		// TODO - Add loggers
+		// TODO - remove demo/doc/biometrics from session, if mvel says not required
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"Refreshing demographic groups");
 
@@ -2189,6 +2185,9 @@ public class DemographicDetailController extends BaseController {
 
 				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
 
+					GridPane screenGridPane = (GridPane) getScreenNode(screen.getName(), screen.getOrder());
+
+					parentFlowPane.getChildren().add(screenGridPane);
 					for (Group group : screen.getGroups()) {
 
 						LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -2196,6 +2195,9 @@ public class DemographicDetailController extends BaseController {
 
 						// TODO Find group is visible or not
 						boolean isVisible = true;
+						GridPane groupGridPane = (GridPane) getScreenNode(group.getName(), group.getOrder());
+
+						screenGridPane.getChildren().add(groupGridPane);
 
 						if (isVisible && group.getFields() != null && !group.getFields().isEmpty()) {
 							LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -2204,7 +2206,7 @@ public class DemographicDetailController extends BaseController {
 							List<Field> list = group.getFields();
 
 							if (list.size() <= 4) {
-								addGroupInUI(list, position, group.getName() + position);
+								addGroupInUI(list, position, groupGridPane);
 
 							} else {
 								for (int index = 0; index <= list.size() / 4; index++) {
@@ -2212,7 +2214,7 @@ public class DemographicDetailController extends BaseController {
 									int toIndex = ((index * 4) + 3) <= list.size() - 1 ? ((index * 4) + 4)
 											: list.size();
 									List<Field> subList = list.subList(index * 4, toIndex);
-									addGroupInUI(subList, position, group.getName() + position);
+									addGroupInUI(subList, position, groupGridPane);
 
 								}
 							}

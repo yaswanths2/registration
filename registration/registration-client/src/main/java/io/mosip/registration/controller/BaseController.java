@@ -83,6 +83,7 @@ import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -100,6 +101,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -228,7 +232,7 @@ public class BaseController {
 	private static Map<String, Field> validationMap;
 
 	private static Map<String, List<io.mosip.registration.dto.schema.Screen>> uiSchemaScreenMap = new LinkedHashMap<>();
-	
+
 	private static Map<String, Field> uiSchemaFieldMap = new LinkedHashMap<>();
 
 	public static Map<String, Field> getLatestSchemaMap() {
@@ -295,7 +299,7 @@ public class BaseController {
 	}
 
 	public Map<String, Field> getUiSchemaFieldMap() {
-		//return validationMap;
+		// return validationMap;
 		return uiSchemaFieldMap;
 	}
 
@@ -1578,7 +1582,7 @@ public class BaseController {
 				}
 				screenList.add(screen);
 				uiSchemaScreenMap.put(screen.getName(), screenList);
-				
+
 				getSchemaFromScreen(screen);
 //				if (screen.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
 //					mapOfbiometricSubtypes.put(schemaField.getSubType(), schemaField.getLabel().get("primary"));
@@ -1594,10 +1598,10 @@ public class BaseController {
 	private void getSchemaFromScreen(io.mosip.registration.dto.schema.Screen screen) {
 		List<Group> groups = screen.getGroups();
 		if (groups != null && !groups.isEmpty()) {
-			for(Group group : groups) {
+			for (Group group : groups) {
 				List<Field> fields = group.getFields();
 				if (fields != null && !fields.isEmpty()) {
-					for(Field field : fields) {
+					for (Field field : fields) {
 						uiSchemaFieldMap.put(field.getId(), field);
 					}
 				}
@@ -1907,5 +1911,31 @@ public class BaseController {
 		List<io.mosip.registration.dto.schema.Screen> screens = uiSchemaScreenMap.get(screenName);
 
 		return screens;
+	}
+
+	public Node getScreenNode(String screenName, int screenNumber) {
+		Node node = null;
+
+		if (screenName != null) {
+			switch (screenName) {
+			case RegistrationConstants.DEMOGRAPHIC_DETAIL: {
+
+				node = new GridPane();
+				node.setId(screenName + screenNumber);
+			}
+			case RegistrationConstants.DOCUMENT_SCAN: {
+
+				node = new VBox();
+			}
+			case RegistrationConstants.GUARDIAN_BIOMETRIC: {
+				node = new GridPane();
+			}
+			}
+
+			if (node != null) {
+				node.setId(screenName + screenNumber);
+			}
+		}
+		return node;
 	}
 }
