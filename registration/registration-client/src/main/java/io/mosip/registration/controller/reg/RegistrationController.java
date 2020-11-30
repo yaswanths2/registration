@@ -451,6 +451,27 @@ public class RegistrationController extends BaseController {
 		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Navigated to next page based on the current page");
 	}
+	
+	public void showPreviousPage(String notTosShow, String show) {
+		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Navigating to previous page based on the current page");
+
+		getCurrentPage(registrationId, notTosShow, show);
+
+		Node currentNode = getNode(notTosShow, pageFlow.getCurrentScreenNumber());
+		if (currentNode != null) {
+			currentNode.setVisible(false);
+			currentNode.setManaged(false);
+		}
+		Node previousNode = getNode(show, pageFlow.getPreviousScreenNumber());
+		if (previousNode != null) {
+			previousNode.setVisible(true);
+			previousNode.setManaged(true);
+		}
+		
+		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Navigated to previous page based on the current page");
+	}
 
 	/**
 	 * 

@@ -1643,10 +1643,12 @@ public class BiometricsController extends BaseController /* implements Initializ
 			return;
 		}
 
-		String prevScreen = pageFlow.getCurrentScreenName();
-
+		registrationController.showPreviousPage(pageFlow.getCurrentScreenName(), pageFlow.getPreviousScreenName());
 		pageFlow.updatePrevious();
-		registrationController.showCurrentPage(prevScreen, pageFlow.getCurrentScreenName());
+//		String prevScreen = pageFlow.getCurrentScreenName();
+//
+//		pageFlow.updatePrevious();
+//		registrationController.showCurrentPage(prevScreen, pageFlow.getCurrentScreenName());
 
 	}
 

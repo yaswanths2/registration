@@ -5,7 +5,6 @@ import static io.mosip.registration.constants.RegistrationConstants.APPLICATION_
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,13 +54,11 @@ import io.mosip.registration.controller.VirtualKeyboard;
 import io.mosip.registration.controller.device.BiometricsController;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.ErrorResponseDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RequiredOnExpr;
 import io.mosip.registration.dto.ResponseDTO;
 import io.mosip.registration.dto.SuccessResponseDTO;
-import io.mosip.registration.dto.Field;
-import io.mosip.registration.dto.Validator;
-import io.mosip.registration.dto.mastersync.DocumentCategoryDto;
 import io.mosip.registration.dto.mastersync.GenericDto;
 import io.mosip.registration.dto.mastersync.LocationDto;
 import io.mosip.registration.dto.schema.Group;
@@ -136,6 +133,10 @@ public class DemographicDetailController extends BaseController {
 	private GridPane scrollParentPane;
 	@FXML
 	private GridPane preRegParentPane;
+	@FXML
+	private Button backBtn;
+	@FXML
+	private ImageView backImageView;
 	@Autowired
 	private DateValidation dateValidation;
 	@Autowired
@@ -210,6 +211,16 @@ public class DemographicDetailController extends BaseController {
 
 		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Entering the Demographic Details Screen");
+		
+		Image backInWhite = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK_FOCUSED));
+		Image backImage = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK));
+		backBtn.hoverProperty().addListener((ov, oldValue, newValue) -> {
+			if (newValue) {
+				backImageView.setImage(backInWhite);
+			} else {
+				backImageView.setImage(backImage);
+			}
+		});
 
 		// listOfComboBoxWithString = new HashMap<>();
 		listOfComboBoxWithObject = new HashMap<>();
@@ -598,9 +609,9 @@ public class DemographicDetailController extends BaseController {
 		fxUtils.focusedAction(hB, mm);
 		fxUtils.focusedAction(hB, yyyy);
 
-		dateValidation.validateDate(parentFlowPane, dd, mm, yyyy, validation, fxUtils, ageField, null, dobMessage);
-		dateValidation.validateMonth(parentFlowPane, dd, mm, yyyy, validation, fxUtils, ageField, null, dobMessage);
-		dateValidation.validateYear(parentFlowPane, dd, mm, yyyy, validation, fxUtils, ageField, null, dobMessage);
+		dateValidation.validateDate(getCurrentPane(), dd, mm, yyyy, validation, fxUtils, ageField, null, dobMessage);
+		dateValidation.validateMonth(getCurrentPane(), dd, mm, yyyy, validation, fxUtils, ageField, null, dobMessage);
+		dateValidation.validateYear(getCurrentPane(), dd, mm, yyyy, validation, fxUtils, ageField, null, dobMessage);
 
 		vB.setDisable(languageType.equals(RegistrationConstants.LOCAL_LANGUAGE));
 
@@ -694,7 +705,7 @@ public class DemographicDetailController extends BaseController {
 		hB.setStyle("-fx-background-color:WHITE");
 		vbox.getChildren().add(hB);
 
-		fxUtils.onTypeFocusUnfocusListener(parentFlowPane, field);
+		fxUtils.onTypeFocusUnfocusListener(getCurrentPane(), field);
 		return vbox;
 	}
 
@@ -967,7 +978,7 @@ public class DemographicDetailController extends BaseController {
 			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					"Show error Label for primary button Field : " + false);
 
-			fxUtils.toggleUIField(parentFlowPane, primaryButton.getParent().getId() + RegistrationConstants.MESSAGE,
+			fxUtils.toggleUIField(getCurrentPane(), primaryButton.getParent().getId() + RegistrationConstants.MESSAGE,
 					false);
 
 			if (secondaryButton != null) {
@@ -975,7 +986,7 @@ public class DemographicDetailController extends BaseController {
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Show error Label for secondary button Field : " + false);
 
-				fxUtils.toggleUIField(parentFlowPane,
+				fxUtils.toggleUIField(getCurrentPane(),
 						secondaryButton.getParent().getId() + RegistrationConstants.MESSAGE, false);
 			}
 
@@ -1582,7 +1593,12 @@ public class DemographicDetailController extends BaseController {
 				Parent uinUpdate = BaseController.load(getClass().getResource(RegistrationConstants.UIN_UPDATE));
 				getScene(uinUpdate);
 			} else {
-				goToHomePageFromRegistration();
+				registrationController.showPreviousPage(pageFlow.getCurrentScreenName(), pageFlow.getPreviousScreenName());
+				pageFlow.updatePrevious();
+				if (pageFlow.getCurrentScreenNumber() == 1) {
+					backBtn.setVisible(false);
+				}
+				//goToHomePageFromRegistration();
 			}
 		} catch (IOException exception) {
 			LOGGER.error("COULD NOT LOAD HOME PAGE", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -1604,7 +1620,7 @@ public class DemographicDetailController extends BaseController {
 		// MVEL validation
 		saveDetail();
 
-		if (registrationController.validateDemographicPane(parentFlowPane)) {
+		if (registrationController.validateDemographicPane(getCurrentPane())) {
 			// saveDetail();
 
 			guardianBiometricsController.populateBiometricPage(false, false);
@@ -1619,14 +1635,14 @@ public class DemographicDetailController extends BaseController {
 					AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
 			String prevScreen = pageFlow.getCurrentScreenName();
-
-			pageFlow.updateNext();
-			registrationController.showCurrentPage(prevScreen, pageFlow.getNextScreenName());
-
-//			
+			pageFlow.updateNext();			
+			String nextScreen = pageFlow.getNextScreenName();
+			if (prevScreen.equalsIgnoreCase(nextScreen)) {
+				backBtn.setVisible(true);
+			}
+			registrationController.showCurrentPage(prevScreen, nextScreen);
 //			registrationController.showCurrentPage(RegistrationConstants.DEMOGRAPHIC_DETAIL,
 //					getPageByAction(RegistrationConstants.DEMOGRAPHIC_DETAIL, RegistrationConstants.NEXT));
-
 		}
 	}
 
@@ -1845,7 +1861,7 @@ public class DemographicDetailController extends BaseController {
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Show text field label");
 
-				fxUtils.showLabel(parentFlowPane, textField);
+				fxUtils.showLabel(getCurrentPane(), textField);
 				if (localField != null) {
 
 					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
@@ -1857,7 +1873,7 @@ public class DemographicDetailController extends BaseController {
 					LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 							"showing secondary label");
 
-					fxUtils.showLabel(parentFlowPane, localField);
+					fxUtils.showLabel(getCurrentPane(), localField);
 
 				}
 
@@ -1877,10 +1893,10 @@ public class DemographicDetailController extends BaseController {
 				// Validate Text Field
 				if (isPrimaryFieldValid && isLocalFieldValid) {
 
-					fxUtils.setTextValidLabel(parentFlowPane, textField);
+					fxUtils.setTextValidLabel(getCurrentPane(), textField);
 
 					if (localField != null) {
-						fxUtils.setTextValidLabel(parentFlowPane, localField);
+						fxUtils.setTextValidLabel(getCurrentPane(), localField);
 
 					}
 //					fxUtils.hideErrorMessageLabel(parentFlowPane, textField);
@@ -1911,10 +1927,10 @@ public class DemographicDetailController extends BaseController {
 					}
 				} else {
 
-					fxUtils.showErrorLabel(textField, parentFlowPane);
+					fxUtils.showErrorLabel(textField, getCurrentPane());
 
 					if (localField != null) {
-						fxUtils.showErrorLabel(localField, parentFlowPane);
+						fxUtils.showErrorLabel(localField, getCurrentPane());
 
 					}
 				}
@@ -1983,10 +1999,20 @@ public class DemographicDetailController extends BaseController {
 	}
 
 	private Node getFxElement(String fieldId) {
-
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"Fetch fx element : " + fieldId);
-		return parentFlowPane.lookup(RegistrationConstants.HASH + fieldId);
+		
+//		Node fxElement = null;
+//		for (Node node : parentFlowPane.getChildren()) {
+//			if (node instanceof Pane) {
+//				Pane pane = (Pane) node;
+//				fxElement = pane.lookup(RegistrationConstants.HASH + fieldId);
+//				if (fxElement != null) {
+//					return fxElement;
+//				}
+//			}
+//		}
+		return getCurrentPane().lookup(RegistrationConstants.HASH + fieldId);
 	}
 
 	private boolean isInputTextValid(TextField textField, String id) {
@@ -1994,7 +2020,7 @@ public class DemographicDetailController extends BaseController {
 		LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 				"Validating text field " + textField.getId());
 
-		return validation.validateTextField(parentFlowPane, textField, id, true);
+		return validation.validateTextField(getCurrentPane(), textField, id, true);
 
 //		return validation.validateTextField(parentFlowPane, primaryLangTextField,
 //				primaryLangTextField.getId() + "_ontype", true);
@@ -2066,21 +2092,21 @@ public class DemographicDetailController extends BaseController {
 
 			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					"Show Label for primary language combo box Field : " + true);
-			fxUtils.toggleUIField(parentFlowPane, primaryComboBox.getId() + RegistrationConstants.LABEL, true);
+			fxUtils.toggleUIField(getCurrentPane(), primaryComboBox.getId() + RegistrationConstants.LABEL, true);
 
 			LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					"Show Message for primary language combo box Field: " + false);
-			fxUtils.toggleUIField(parentFlowPane, primaryComboBox.getId() + RegistrationConstants.MESSAGE, false);
+			fxUtils.toggleUIField(getCurrentPane(), primaryComboBox.getId() + RegistrationConstants.MESSAGE, false);
 
 			if (isLocalLanguageAvailable() && !isAppLangAndLocalLangSame()) {
 
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Show Label for secondary language combo box Field : " + true);
-				fxUtils.toggleUIField(parentFlowPane, secondaryComboBox.getId() + RegistrationConstants.LABEL, true);
+				fxUtils.toggleUIField(getCurrentPane(), secondaryComboBox.getId() + RegistrationConstants.LABEL, true);
 
 				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 						"Show Message for secondary language combo box Field: " + false);
-				fxUtils.toggleUIField(parentFlowPane, secondaryComboBox.getId() + RegistrationConstants.MESSAGE, false);
+				fxUtils.toggleUIField(getCurrentPane(), secondaryComboBox.getId() + RegistrationConstants.MESSAGE, false);
 			}
 
 			RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
@@ -2228,6 +2254,17 @@ public class DemographicDetailController extends BaseController {
 		}
 
 		// TODO Need to handle in screen level
+	}
+	
+	private Pane getCurrentPane() {
+		String id = pageFlow.getCurrentScreenName() + pageFlow.getCurrentScreenNumber();
+		Pane paneToValidate = null;
+		for(Node node : parentFlowPane.getChildren()) {
+			if(node instanceof Pane && node.getId().equalsIgnoreCase(id)) {
+				paneToValidate = (Pane) node;
+			}
+		}
+		return paneToValidate;
 	}
 
 }

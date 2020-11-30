@@ -1294,10 +1294,12 @@ public class DocumentScanController extends BaseController {
 		auditFactory.audit(AuditEvent.REG_DOC_BACK, Components.REG_DOCUMENTS, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
 
-		String prevScreen = pageFlow.getCurrentScreenName();
-
+		registrationController.showPreviousPage(pageFlow.getCurrentScreenName(), pageFlow.getPreviousScreenName());
 		pageFlow.updatePrevious();
-		registrationController.showCurrentPage(prevScreen, pageFlow.getCurrentScreenName());
+//		String prevScreen = pageFlow.getCurrentScreenName();
+//
+//		pageFlow.updatePrevious();
+//		registrationController.showCurrentPage(prevScreen, pageFlow.getCurrentScreenName());
 	}
 
 	/**

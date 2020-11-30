@@ -44,7 +44,9 @@ public class RequiredFieldValidator {
 		if (schemaField == null)
 			return required;
 		required = schemaField.isRequired();
-		required = isRequiredField(schemaField.getRequiredOn(), registrationDTO);
+		if(schemaField.getRequiredOn() != null && !schemaField.getRequiredOn().isEmpty()) {
+			required = isRequiredField(schemaField.getRequiredOn(), registrationDTO);
+		}
 		return required;
 	}
 
