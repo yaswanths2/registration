@@ -1926,14 +1926,16 @@ public class BaseController {
 			case RegistrationConstants.DEMOGRAPHIC_DETAIL: {
 
 				node = new GridPane();
-				node.setId(screenName + screenNumber);
+				break;
 			}
 			case RegistrationConstants.DOCUMENT_SCAN: {
 
 				node = new VBox();
+				break;
 			}
 			case RegistrationConstants.GUARDIAN_BIOMETRIC: {
 				node = new GridPane();
+				break;
 			}
 			}
 
