@@ -47,6 +47,10 @@ public class ComboBoxAutoComplete<T> {
 		this.cmb = cmb;
 		originalItems = FXCollections.observableArrayList(cmb.getItems());
 		cmb.setTooltip(new Tooltip());
+		cmb.setOnMouseClicked(event -> {
+			cmb.getTooltip().show(cmb, event.getScreenX(), event.getScreenY() - 18);
+			cmb.getTooltip().hide();
+		});
 		cmb.setOnKeyPressed(this::handleOnKeyPressed);
 		cmb.setOnHidden(this::handleOnHiding);
 
@@ -106,7 +110,8 @@ public class ComboBoxAutoComplete<T> {
 			double posY = stage.getY() + cmb.getBoundsInParent().getMinY();
 
 //			event.getScreenX(), event.getScreenY() + 15)
-			cmb.getTooltip().show(stage, cmb.getBoundsInParent().getHeight(), cmb.getBoundsInParent().getWidth());
+//			cmb.getTooltip().show(stage, cmb.getParent().getLayoutX(), cmb.getParent().getParent().getLayoutY());
+			cmb.getTooltip().show(stage);
 			cmb.show();
 
 			cmb.getItems().setAll(filteredList);
