@@ -57,9 +57,12 @@ import io.mosip.registration.controller.reg.DocumentScanController;
 import io.mosip.registration.controller.reg.RegistrationController;
 import io.mosip.registration.controller.reg.UserOnboardParentController;
 import io.mosip.registration.dao.UserDetailDAO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.mastersync.BiometricAttributeDto;
 import io.mosip.registration.dto.packetmanager.BiometricsDto;
 import io.mosip.registration.dto.packetmanager.DocumentDto;
+import io.mosip.registration.dto.schema.Group;
+import io.mosip.registration.dto.schema.Screen;
 import io.mosip.registration.entity.UserBiometric;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.mdm.dto.Biometric;
@@ -374,6 +377,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 		LOGGER.debug(LOG_REG_BIOMETRIC_CONTROLLER, APPLICATION_NAME, APPLICATION_ID,
 				"populateBiometricPage invoked, isUserOnboard : " + isUserOnboard);
 
+		setBiometricsSubTypesMap();
 		isUserOnboardFlag = isUserOnboard;
 		Map<Entry<String, String>, Map<String, List<List<String>>>> mapToProcess = isUserOnboardFlag
 				? getOnboardUserMap()
@@ -1616,9 +1620,8 @@ public class BiometricsController extends BaseController /* implements Initializ
 			return;
 		}
 
-		registrationController.showCurrentPage(RegistrationConstants.GUARDIAN_BIOMETRIC,
-				getPageByAction(RegistrationConstants.GUARDIAN_BIOMETRIC, RegistrationConstants.PREVIOUS));
-
+		registrationController.showPreviousPage(pageFlow.getCurrentScreenName(), pageFlow.getPreviousScreenName());
+		pageFlow.updatePrevious();
 	}
 
 	/**
@@ -2344,11 +2347,11 @@ public class BiometricsController extends BaseController /* implements Initializ
 			if (hBox.getChildren().size() == 1) {
 				ImageView tickImageView;
 				if (isAllExceptions) {
-					tickImageView = new ImageView(new Image(this.getClass()
-							.getResourceAsStream(RegistrationConstants.EXCLAMATION_IMG_PATH)));
+					tickImageView = new ImageView(
+							new Image(this.getClass().getResourceAsStream(RegistrationConstants.EXCLAMATION_IMG_PATH)));
 				} else {
-					tickImageView = new ImageView(new Image(this.getClass()
-							.getResourceAsStream(RegistrationConstants.TICK_CIRICLE_IMG_PATH)));
+					tickImageView = new ImageView(new Image(
+							this.getClass().getResourceAsStream(RegistrationConstants.TICK_CIRICLE_IMG_PATH)));
 				}
 				tickImageView.setFitWidth(40);
 				tickImageView.setFitHeight(40);
@@ -2398,7 +2401,7 @@ public class BiometricsController extends BaseController /* implements Initializ
 								} else {
 									imageView = new ImageView(new Image(this.getClass()
 											.getResourceAsStream(RegistrationConstants.TICK_CIRICLE_IMG_PATH)));
-								}								
+								}
 
 								imageView.setFitWidth(40);
 								imageView.setFitHeight(40);
@@ -3005,4 +3008,42 @@ public class BiometricsController extends BaseController /* implements Initializ
 		documentScanController.startStream(this);
 	}
 
+	private void setBiometricsSubTypesMap() {
+		List<Screen> screens = getScreens(RegistrationConstants.GUARDIAN_BIOMETRIC);
+
+		if (screens != null && !screens.isEmpty()) {
+
+			for (Screen screen : screens) {
+				LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+						"Started screen : " + screen.getName());
+
+				if (screen.isVisible() && screen.getGroups() != null && !screen.getGroups().isEmpty()) {
+
+					for (Group group : screen.getGroups()) {
+
+						LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+								"Verifying group : " + group.getName());
+
+						// TODO Find group is visible or not
+						boolean isVisible = true;
+
+						if (isVisible && group.getFields() != null && !group.getFields().isEmpty()) {
+							LOGGER.debug(loggerClassName, APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
+									"Group is active : " + group.getName());
+
+							List<Field> list = group.getFields();
+
+							for (Field schemaField : list) {
+								if (schemaField.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
+									getMapOfbiometricSubtypes().put(schemaField.getSubType(),
+											schemaField.getLabel().get("primary"));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
 }

@@ -27,7 +27,7 @@ import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.constants.RegistrationUIConstants;
 import io.mosip.registration.controller.BaseController;
 import io.mosip.registration.controller.FXUtils;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -81,7 +81,7 @@ public class UpdateUINController extends BaseController implements Initializable
 
 	private HashMap<String, Object> checkBoxKeeper;
 
-	private Map<String, List<UiSchemaDTO>> groupedMap;
+	private Map<String, List<Field>> groupedMap;
 
 	private FXUtils fxUtils;
 
@@ -96,10 +96,10 @@ public class UpdateUINController extends BaseController implements Initializable
 
 		fxUtils = FXUtils.getInstance();
 		checkBoxKeeper = new HashMap<>();
-		Map<String, UiSchemaDTO> schemaMap = getValidationMap();
+		Map<String, Field> schemaMap = getUiSchemaFieldMap();
 
 		groupedMap = schemaMap.values().stream().filter(field -> field.getGroup() != null && field.isInputRequired())
-				.collect(Collectors.groupingBy(UiSchemaDTO::getGroup));
+				.collect(Collectors.groupingBy(Field::getGroup));
 
 		parentFlow = parentFlowPane.getChildren();
 		groupedMap.forEach((groupName, list) -> {
@@ -172,12 +172,12 @@ public class UpdateUINController extends BaseController implements Initializable
 			if (StringUtils.isEmpty(uinId.getText())) {
 				generateAlert(RegistrationConstants.ERROR, RegistrationUIConstants.UPDATE_UIN_ENTER_UIN_ALERT);
 			} else {
-				Map<String, UiSchemaDTO> selectedFields = new HashMap<String, UiSchemaDTO>();
+				Map<String, Field> selectedFields = new HashMap<String, Field>();
 				List<String> selectedFieldGroups = new ArrayList<String>();
 				for (String key : checkBoxKeeper.keySet()) {
 					if (((CheckBox) checkBoxKeeper.get(key)).isSelected()) {
 						selectedFieldGroups.add(key);
-						for (UiSchemaDTO field : groupedMap.get(key)) {
+						for (Field field : groupedMap.get(key)) {
 							selectedFields.put(field.getId(), field);
 						}
 					}

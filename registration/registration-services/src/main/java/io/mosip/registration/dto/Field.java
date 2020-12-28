@@ -28,8 +28,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UiSchemaDTO {
-
+public class Field {
 	private String id;
 	private boolean inputRequired;
 	private String type;
@@ -60,5 +59,4 @@ public class UiSchemaDTO {
 	private String group;
 
 	private String changeAction;
-
 }

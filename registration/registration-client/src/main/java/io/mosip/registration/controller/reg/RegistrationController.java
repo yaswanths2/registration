@@ -24,12 +24,13 @@ import io.mosip.registration.controller.auth.AuthenticationController;
 import io.mosip.registration.dto.OSIDataDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationMetaDataDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.service.IdentitySchemaService;
 import io.mosip.registration.service.sync.MasterSyncService;
 import io.mosip.registration.update.SoftwareUpdateHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
@@ -103,6 +104,10 @@ public class RegistrationController extends BaseController {
 			}
 			uinUpdate();
 
+			pageFlow.setCurrentScreenNumber(1);
+
+			showCurrentPage(null, pageFlow.getNextScreenName());
+
 		} catch (RuntimeException runtimeException) {
 			LOGGER.error("REGISTRATION - CONTROLLER", APPLICATION_NAME, RegistrationConstants.APPLICATION_ID,
 					runtimeException.getMessage() + ExceptionUtils.getStackTrace(runtimeException));
@@ -119,7 +124,7 @@ public class RegistrationController extends BaseController {
 		}
 	}
 
-	public void init(String UIN, HashMap<String, Object> selectionListDTO, Map<String, UiSchemaDTO> selectedFields,
+	public void init(String UIN, HashMap<String, Object> selectionListDTO, Map<String, Field> selectedFields,
 			List<String> selectedFieldGroups) {
 		validation.updateAsLostUIN(false);
 		createRegistrationDTOObject(RegistrationConstants.PACKET_TYPE_UPDATE);
@@ -159,8 +164,7 @@ public class RegistrationController extends BaseController {
 	/**
 	 * To detect the face from the captured photograph for validation.
 	 * 
-	 * @param applicantImage
-	 *            the image that is captured as applicant photograph
+	 * @param applicantImage the image that is captured as applicant photograph
 	 * @return BufferedImage the face that is detected from the applicant photograph
 	 */
 	/*
@@ -179,8 +183,7 @@ public class RegistrationController extends BaseController {
 	 * To compress the detected face from the image of applicant and store it in DTO
 	 * to use it for QR Code generation
 	 * 
-	 * @param applicantImage
-	 *            the image that is captured as applicant photograph
+	 * @param applicantImage the image that is captured as applicant photograph
 	 */
 	/*
 	 * private void compressImageForQRCode(BufferedImage detectedFace) { try {
@@ -388,13 +391,13 @@ public class RegistrationController extends BaseController {
 		List<String> defaultFieldGroups = new ArrayList<String>();
 
 		defaultFieldGroups.add(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
-		for (UiSchemaDTO uiSchemaDTO : fetchByGroup(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME)) {
-			defaultFields.add(uiSchemaDTO.getId());
+		for (Field field : fetchByGroup(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME)) {
+			defaultFields.add(field.getId());
 		}
 		// Used to update printing name as default
 		registrationDTO.setDefaultUpdatableFieldGroups(defaultFieldGroups);
 		registrationDTO.setDefaultUpdatableFields(defaultFields);
-		
+
 		// Put the RegistrationDTO object to SessionContext Map
 		SessionContext.map().put(RegistrationConstants.REGISTRATION_DATA, registrationDTO);
 	}
@@ -428,14 +431,46 @@ public class RegistrationController extends BaseController {
 	 * This method will determine the current page
 	 */
 	public void showCurrentPage(String notTosShow, String show) {
-
 		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Navigating to next page based on the current page");
 
 		getCurrentPage(registrationId, notTosShow, show);
 
+		Node previousNode = getNode(notTosShow, pageFlow.getPreviousScreenNumber());
+
+		if (previousNode != null) {
+			previousNode.setVisible(false);
+			previousNode.setManaged(false);
+		}
+		Node currentNode = getNode(show, pageFlow.getCurrentScreenNumber());
+
+		if (currentNode != null) {
+			currentNode.setVisible(true);
+			currentNode.setManaged(true);
+		}
 		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
 				RegistrationConstants.APPLICATION_ID, "Navigated to next page based on the current page");
+	}
+	
+	public void showPreviousPage(String notTosShow, String show) {
+		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Navigating to previous page based on the current page");
+
+		getCurrentPage(registrationId, notTosShow, show);
+
+		Node currentNode = getNode(notTosShow, pageFlow.getCurrentScreenNumber());
+		if (currentNode != null) {
+			currentNode.setVisible(false);
+			currentNode.setManaged(false);
+		}
+		Node previousNode = getNode(show, pageFlow.getPreviousScreenNumber());
+		if (previousNode != null) {
+			previousNode.setVisible(true);
+			previousNode.setManaged(true);
+		}
+		
+		LOGGER.debug(RegistrationConstants.REGISTRATION_CONTROLLER, RegistrationConstants.APPLICATION_NAME,
+				RegistrationConstants.APPLICATION_ID, "Navigated to previous page based on the current page");
 	}
 
 	/**

@@ -52,12 +52,14 @@ import io.mosip.registration.controller.reg.PacketHandlerController;
 import io.mosip.registration.controller.reg.RegistrationPreviewController;
 import io.mosip.registration.controller.reg.Validations;
 import io.mosip.registration.dto.AuthenticationValidatorDTO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.UiSchemaDTO;
 import io.mosip.registration.dto.biometric.BiometricExceptionDTO;
 import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
+import io.mosip.registration.dto.schema.Group;
+import io.mosip.registration.dto.schema.SchemaDTO;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.IdentitySchemaService;
@@ -82,6 +84,7 @@ import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -99,6 +102,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -225,18 +229,25 @@ public class BaseController {
 
 	private static boolean isAckOpened = false;
 
-	private List<UiSchemaDTO> uiSchemaDTOs;
+	private List<Field> fields;
 
-	private static Map<String, UiSchemaDTO> validationMap;
+	private static Map<String, Field> validationMap;
+
+	private static Map<String, List<io.mosip.registration.dto.schema.Screen>> uiSchemaScreenMap = new LinkedHashMap<>();
+
+	private static Map<String, Field> uiSchemaFieldMap = new LinkedHashMap<>();
+
+	public static Map<String, Field> getLatestSchemaMap() {
+		return uiSchemaFieldMap;
+	}
+
+	public static void setLatestSchemaMap(Map<String, Field> latestSchemaMap) {
+		BaseController.uiSchemaFieldMap = latestSchemaMap;
+	}
 
 	private static TreeMap<String, String> mapOfbiometricSubtypes = new TreeMap<>();
 
-	// private static List<String> listOfBiometricSubTypes = new ArrayList<>();
-
-	/*
-	 * public static List<String> getListOfBiometricSubTypess() { return
-	 * listOfBiometricSubTypes; }
-	 */
+	private static Map<String, TreeMap<Integer, Node>> screenNodeMap = new LinkedHashMap<String, TreeMap<Integer, Node>>();
 
 	public static TreeMap<String, String> getMapOfbiometricSubtypes() {
 		return mapOfbiometricSubtypes;
@@ -271,12 +282,26 @@ public class BaseController {
 	 * 
 	 * @param validations is a map id's and regex validations
 	 */
-	public void setValidations(Map<String, UiSchemaDTO> validations) {
+	public void setValidations(Map<String, Field> validations) {
 		validationMap = validations;
 	}
 
-	public Map<String, UiSchemaDTO> getValidationMap() {
-		return validationMap;
+	/**
+	 * Set Latest Validations map
+	 * 
+	 * @param validations is a map id's and regex validations
+	 */
+	public void setUiSchemaScreenMap(Map<String, List<io.mosip.registration.dto.schema.Screen>> validations) {
+		uiSchemaScreenMap = validations;
+	}
+
+	public Map<String, Field> getUiSchemaFieldMap() {
+		// return validationMap;
+		return uiSchemaFieldMap;
+	}
+
+	public Map<String, List<io.mosip.registration.dto.schema.Screen>> getUiSchemaScreenMap() {
+		return uiSchemaScreenMap;
 	}
 
 	/**
@@ -1542,32 +1567,54 @@ public class BaseController {
 		this.isAckOpened = isAckOpened;
 	}
 
-	public void loadUIElementsFromSchema() {
-
+	public void loadUiSchema() {
 		try {
-			List<UiSchemaDTO> schemaFields = identitySchemaService.getLatestEffectiveUISchema();
-			Map<String, UiSchemaDTO> validationsMap = new LinkedHashMap<>();
-			for (UiSchemaDTO schemaField : schemaFields) {
-				validationsMap.put(schemaField.getId(), schemaField);
-				if (schemaField.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
-					mapOfbiometricSubtypes.put(schemaField.getSubType(), schemaField.getLabel().get("primary"));
-					// if (!listOfBiometricSubTypes.contains(schemaField.getSubType()))
-					// listOfBiometricSubTypes.add(schemaField.getSubType());
+
+			SchemaDTO schema = identitySchemaService.getLatestEffectiveUISchema();
+			Map<String, io.mosip.registration.dto.schema.Screen> validationsMap = new LinkedHashMap<>();
+			for (io.mosip.registration.dto.schema.Screen screen : schema.getScreens()) {
+
+				PageFlow.getUiSchemaPageFlow().put(screen.getOrder(), screen.getName());
+
+				List<io.mosip.registration.dto.schema.Screen> screenList = new LinkedList<>();
+
+				// THIS IS NOT REQUIRED
+				/*
+				 * ApplicationContext.map().put(RegistrationConstants.indBiometrics,
+				 * getBioAttributesBySubType(RegistrationConstants.indBiometrics));
+				 * ApplicationContext.map().put("parentOrGuardianBiometrics",
+				 * getBioAttributesBySubType("parentOrGuardianBiometrics"));
+				 */
+				if (uiSchemaScreenMap.containsKey(screen.getName())
+						&& uiSchemaScreenMap.get(screen.getName()) != null) {
+					screenList = uiSchemaScreenMap.get(screen.getName());
 				}
+				screenList.add(screen);
+				uiSchemaScreenMap.put(screen.getName(), screenList);
+
+				getSchemaFromScreen(screen);
+//				if (screen.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
+//					mapOfbiometricSubtypes.put(schemaField.getSubType(), schemaField.getLabel().get("primary"));
+//				}
 			}
-			validations.setValidations(validationsMap); // Set Validations Map
-
-			// THIS IS NOT REQUIRED
-			/*
-			 * ApplicationContext.map().put(RegistrationConstants.indBiometrics,
-			 * getBioAttributesBySubType(RegistrationConstants.indBiometrics));
-			 * ApplicationContext.map().put("parentOrGuardianBiometrics",
-			 * getBioAttributesBySubType("parentOrGuardianBiometrics"));
-			 */
-
+			validations.setUiSchemaScreenMap(uiSchemaScreenMap); // Set Validations Map
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	private void getSchemaFromScreen(io.mosip.registration.dto.schema.Screen screen) {
+		List<Group> groups = screen.getGroups();
+		if (groups != null && !groups.isEmpty()) {
+			for (Group group : groups) {
+				List<Field> fields = group.getFields();
+				if (fields != null && !fields.isEmpty()) {
+					for (Field field : fields) {
+						uiSchemaFieldMap.put(field.getId(), field);
+					}
+				}
+			}
 		}
 	}
 
@@ -1682,7 +1729,7 @@ public class BaseController {
 	private List<String> getAttributesByTypeAndSubType(String type, String subType) {
 		List<String> bioAttributes = new LinkedList<>();
 		if (type != null && subType != null) {
-			for (Map.Entry<String, UiSchemaDTO> entry : validations.getValidationMap().entrySet()) {
+			for (Map.Entry<String, Field> entry : validations.getUiSchemaFieldMap().entrySet()) {
 				if (type.equalsIgnoreCase(entry.getValue().getType())
 						&& subType.equalsIgnoreCase(entry.getValue().getSubType())
 						&& entry.getValue().getBioAttributes() != null) {
@@ -1731,7 +1778,7 @@ public class BaseController {
 		return nonConfigBiometrics;
 	}
 
-	protected boolean isDemographicField(UiSchemaDTO schemaField) {
+	protected boolean isDemographicField(Field schemaField) {
 		return (schemaField.isInputRequired()
 				&& !(PacketManagerConstants.BIOMETRICS_DATATYPE.equals(schemaField.getType())
 						|| PacketManagerConstants.DOCUMENTS_DATATYPE.equals(schemaField.getType())));
@@ -1774,7 +1821,7 @@ public class BaseController {
 		return new ArrayList<String>();
 	}
 
-	protected void helperMethodForComboBox(ComboBox<?> field, String fieldName, UiSchemaDTO schema, Label label,
+	protected void helperMethodForComboBox(ComboBox<?> field, String fieldName, Field schema, Label label,
 			Label validationMessage, VBox vbox, String languageType) {
 
 		String mandatoryAstrik = demographicDetailController.getMandatorySuffix(schema);
@@ -1862,12 +1909,6 @@ public class BaseController {
 		return mapToProcess;
 	}
 
-	protected List<UiSchemaDTO> fetchByGroup(String group) {
-		return validation.getValidationMap().values().stream()
-				.filter(schemaDto -> schemaDto.getGroup() != null && schemaDto.getGroup().equalsIgnoreCase(group))
-				.collect(Collectors.toList());
-	}
-
 	protected String getCssName() {
 		return cssName;
 	}
@@ -1885,6 +1926,78 @@ public class BaseController {
 			return time + RegistrationConstants.UTC_APPENDER;
 		}
 
+	}
+
+	protected List<Field> fetchByGroup(String group) {
+		return validation.getUiSchemaFieldMap().values().stream()
+				.filter(schemaDto -> schemaDto.getGroup() != null && schemaDto.getGroup().equalsIgnoreCase(group))
+				.collect(Collectors.toList());
+	}
+
+	public List<io.mosip.registration.dto.schema.Screen> getScreens(String screenName) {
+
+		// TODO get UiSchemaDTO
+		List<io.mosip.registration.dto.schema.Screen> screens = uiSchemaScreenMap.get(screenName);
+
+		return screens;
+	}
+
+	public Node getScreenNode(String screenName, int screenNumber) {
+		Node node = null;
+
+		if (screenName != null) {
+			switch (screenName) {
+			case RegistrationConstants.DEMOGRAPHIC_DETAIL: {
+
+				node = new GridPane();
+				break;
+			}
+			case RegistrationConstants.DOCUMENT_SCAN: {
+
+				node = new VBox();
+				break;
+			}
+			case RegistrationConstants.GUARDIAN_BIOMETRIC: {
+				node = new GridPane();
+				break;
+			}
+			}
+
+			if (node != null) {
+				node.setId(screenName + screenNumber);
+			}
+		}
+		return node;
+	}
+
+	public Map<String, TreeMap<Integer, Node>> getScreenNodeMap() {
+		return screenNodeMap;
+	}
+
+	public void addNode(String screenName, int order, Node node) {
+
+		TreeMap<Integer, Node> screenNode = screenNodeMap.get(screenName);
+
+		if (screenNode == null) {
+			screenNode = new TreeMap<Integer, Node>();
+
+		}
+
+		screenNode.put(order, node);
+
+		screenNodeMap.put(screenName, screenNode);
+
+	}
+
+	public Node getNode(String screenName, int order) {
+
+		TreeMap<Integer, Node> screenNode = screenNodeMap.get(screenName);
+
+		if (screenNode != null) {
+			return screenNode.get(order);
+
+		}
+		return null;
 	}
 
 }

@@ -52,7 +52,7 @@ public class Initialization extends Application {
 			setPrimaryStage(primaryStage);
 			LoginController loginController = applicationContext.getBean(LoginController.class);
 			loginController.loadInitialScreen(primaryStage);
-			loginController.loadUIElementsFromSchema();
+			loginController.loadUiSchema();
 			SessionContext.setApplicationContext(applicationContext);
 
 			LOGGER.info("REGISTRATION - LOGIN SCREEN INITILIZATION - REGISTRATIONAPPINITILIZATION", APPLICATION_NAME,

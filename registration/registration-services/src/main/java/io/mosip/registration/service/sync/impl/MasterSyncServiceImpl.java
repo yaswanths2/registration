@@ -45,7 +45,7 @@ import io.mosip.registration.dao.MachineMappingDAO;
 import io.mosip.registration.dao.MasterSyncDao;
 import io.mosip.registration.dto.IndividualTypeDto;
 import io.mosip.registration.dto.ResponseDTO;
-import io.mosip.registration.dto.response.SchemaDto;
+import io.mosip.registration.dto.response.UiSchemaDTO;
 import io.mosip.registration.dto.response.SyncDataResponseDto;
 import io.mosip.registration.entity.BiometricAttribute;
 import io.mosip.registration.entity.BlacklistedWords;
@@ -771,11 +771,11 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 					String jsonString = MapperUtils
 							.convertObjectToJsonString(syncResponse.get(RegistrationConstants.RESPONSE));
-					SchemaDto schemaDto = MapperUtils.convertJSONStringToDto(jsonString,
-							new TypeReference<SchemaDto>() {
+					UiSchemaDTO uiSchemaDTO = MapperUtils.convertJSONStringToDto(jsonString,
+							new TypeReference<UiSchemaDTO>() {
 							});
 
-					identitySchemaDao.createIdentitySchema(schemaDto);
+					identitySchemaDao.createIdentitySchema(uiSchemaDTO);
 					setSuccessResponse(responseDTO, RegistrationConstants.SUCCESS, null);
 				} else
 					setErrorResponse(responseDTO, errorMsg(syncResponse), null);

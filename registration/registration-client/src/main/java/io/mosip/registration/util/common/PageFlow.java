@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,8 @@ import io.mosip.registration.config.AppConfig;
 import io.mosip.registration.constants.LoggerConstants;
 import io.mosip.registration.constants.RegistrationConstants;
 import io.mosip.registration.context.ApplicationContext;
-import io.mosip.registration.controller.reg.Validations;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.controller.BaseController;
+import io.mosip.registration.dto.Field;
 
 /**
  * This class will give the Page Flow
@@ -35,8 +36,76 @@ public class PageFlow {
 
 	private static Map<String, Map<String, Boolean>> onBoardingPageFlowMap;
 
+	private int currentScreenNumber = 1;
+
+	private int previousScreenNumber = 1;
+
+	public int getPreviousScreenNumber() {
+		return previousScreenNumber;
+	}
+
+	public int getCurrentScreenNumber() {
+		return currentScreenNumber;
+	}
+
+	public void setCurrentScreenNumber(int currentScreenNumber) {
+		this.currentScreenNumber = currentScreenNumber;
+		this.previousScreenNumber = currentScreenNumber;
+	}
+
+	private static TreeMap<Integer, String> uiSchemaPageFlow = new TreeMap<Integer, String>();
+
+	public static Map<Integer, String> getUiSchemaPageFlow() {
+		return uiSchemaPageFlow;
+	}
+
+	public String getNextScreenName() {
+
+		String screenName = "";
+
+//		Integer nextScreen = uiSchemaPageFlow.ceilingKey(currentScreenNumber);
+		screenName = uiSchemaPageFlow.get(currentScreenNumber);
+		if (screenName != null) {
+//
+//			previousScreenNumber = currentScreenNumber;
+//			++currentScreenNumber;
+		}
+		return screenName;
+
+	}
+
+	public void updateNext() {
+		previousScreenNumber = currentScreenNumber;
+		++currentScreenNumber;
+
+	}
+
+	public void updatePrevious() {
+
+		currentScreenNumber = previousScreenNumber;
+		--previousScreenNumber;
+
+	}
+
+	public String getCurrentScreenName() {
+
+		return uiSchemaPageFlow.get(currentScreenNumber);
+
+	}
+
+	public String getPreviousScreenName() {
+		String screenName = "";
+
+		screenName = uiSchemaPageFlow.get(previousScreenNumber);
+		if (screenName != null) {
+//			currentScreenNumber = previousScreenNumber;
+//			--previousScreenNumber;
+		}
+		return screenName;
+	}
+
 	@Autowired
-	private Validations validations;
+	private BaseController baseController;
 
 	/**
 	 * This method sets the initial page flow for all the functionalities like New
@@ -72,9 +141,10 @@ public class PageFlow {
 		registrationMap.put(RegistrationConstants.DEMOGRAPHIC_DETAIL, demographicMap);
 
 		String docType = "documentType";
-		List<UiSchemaDTO> docList = null;
-		if(validations != null && validations.getValidationMap() != null && !validations.getValidationMap().isEmpty()) {
-			docList = validations.getValidationMap().values().stream()
+		List<Field> docList = null;
+		if (baseController != null && baseController.getUiSchemaFieldMap() != null
+				&& !baseController.getUiSchemaFieldMap().isEmpty()) {
+			docList = baseController.getUiSchemaFieldMap().values().stream()
 					.filter(schemaDto -> schemaDto.getType() != null && schemaDto.getType().equalsIgnoreCase(docType))
 					.collect(Collectors.toList());
 		}
@@ -198,8 +268,7 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param currentPage
-	 *            registration page name
+	 * @param currentPage registration page name
 	 * @return returns registration next page name if current page and next page
 	 *         found, else null
 	 */
@@ -213,8 +282,7 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param currentPage
-	 *            registration page name
+	 * @param currentPage registration page name
 	 * @return returns registration previous page name if current page and previous
 	 *         page found, else null
 	 */
@@ -277,12 +345,9 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            page name
-	 * @param key
-	 *            to find attributes such as visibility
-	 * @param val
-	 *            boolean value to say true or false
+	 * @param page page name
+	 * @param key  to find attributes such as visibility
+	 * @param val  boolean value to say true or false
 	 */
 	public void updateOnBoardingMap(String page, String key, boolean val) {
 
@@ -295,12 +360,9 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            page name
-	 * @param key
-	 *            to find attributes such as visibility
-	 * @param val
-	 *            boolean value to say true or false
+	 * @param page page name
+	 * @param key  to find attributes such as visibility
+	 * @param val  boolean value to say true or false
 	 */
 	public void updateRegMap(String page, String key, boolean val) {
 
@@ -313,10 +375,8 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            Registration page Name
-	 * @param attribute
-	 *            attribute in the Registration page
+	 * @param page      Registration page Name
+	 * @param attribute attribute in the Registration page
 	 * @return returns whether visible or not
 	 */
 	public boolean isVisibleInRegFlowMap(String page, String attribute) {
@@ -332,10 +392,8 @@ public class PageFlow {
 	}
 
 	/**
-	 * @param page
-	 *            registration page Name
-	 * @param attribute
-	 *            attribute in the onBoard page
+	 * @param page      registration page Name
+	 * @param attribute attribute in the onBoard page
 	 * @return returns whether visible or not
 	 */
 	public boolean isVisibleInOnBoardFlowMap(String page, String attribute) {
@@ -349,4 +407,5 @@ public class PageFlow {
 
 		return isVisible;
 	}
+
 }
