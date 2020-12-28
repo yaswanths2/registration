@@ -29,10 +29,11 @@ import io.mosip.registration.constants.RegistrationType;
 import io.mosip.registration.context.ApplicationContext;
 import io.mosip.registration.context.SessionContext;
 import io.mosip.registration.dao.RegistrationDAO;
+import io.mosip.registration.dto.Field;
 import io.mosip.registration.dto.PacketStatusDTO;
 import io.mosip.registration.dto.RegistrationDTO;
 import io.mosip.registration.dto.RegistrationDataDto;
-import io.mosip.registration.dto.UiSchemaDTO;
+import io.mosip.registration.dto.response.UiSchemaDTO;
 import io.mosip.registration.entity.Registration;
 import io.mosip.registration.entity.RegistrationTransaction;
 import io.mosip.registration.exception.RegBaseCheckedException;
@@ -56,7 +57,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	/** The registration repository. */
 	@Autowired
 	private RegistrationRepository registrationRepository;
-	
+
 	@Autowired
 	private IdentitySchemaService identitySchemaService;
 
@@ -93,29 +94,32 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registration.setRegUsrId(SessionContext.userContext().getUserId());
 			registration.setApproverUsrId(SessionContext.userContext().getUserId());
 			registration.setPreRegId(registrationDTO.getPreRegistrationId());
-			
+
 			RegistrationDataDto registrationDataDto = new RegistrationDataDto();
-			
+
 			String applicantName = null;
 			String fullNameKey = getKey(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME);
 			if (fullNameKey.contains(RegistrationConstants.COMMA)) {
 				List<String> fullNameKeys = Arrays.asList(fullNameKey.split(RegistrationConstants.COMMA));
 				for (String key : fullNameKeys) {
 					Object fullNameObj = registrationDTO.getDemographics().get(key);
-					applicantName = applicantName == null ? getAdditionalInfo(fullNameObj) : applicantName.concat(RegistrationConstants.SPACE).concat(getAdditionalInfo(fullNameObj));
+					applicantName = applicantName == null ? getAdditionalInfo(fullNameObj)
+							: applicantName.concat(RegistrationConstants.SPACE).concat(getAdditionalInfo(fullNameObj));
 				}
 			} else {
 				Object fullNameObj = registrationDTO.getDemographics().get(fullNameKey);
 				applicantName = getAdditionalInfo(fullNameObj);
 			}
 
-			Object emailObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_GROUP_EMAIL));
-			Object phoneObj = registrationDTO.getDemographics().get(getKey(RegistrationConstants.UI_SCHEMA_GROUP_PHONE));
-			
+			Object emailObj = registrationDTO.getDemographics()
+					.get(getKey(RegistrationConstants.UI_SCHEMA_GROUP_EMAIL));
+			Object phoneObj = registrationDTO.getDemographics()
+					.get(getKey(RegistrationConstants.UI_SCHEMA_GROUP_PHONE));
+
 			registrationDataDto.setName(applicantName);
 			registrationDataDto.setEmail(getAdditionalInfo(emailObj));
 			registrationDataDto.setPhone(getAdditionalInfo(phoneObj));
-			
+
 			String additionalInfo = JsonUtils.javaObjectToJsonString(registrationDataDto);
 			registration.setAdditionalInfo(additionalInfo.getBytes());
 
@@ -139,15 +143,16 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 					RegistrationExceptionConstants.REG_PACKET_SAVE_TO_DB_EXCEPTION.getErrorMessage(), runtimeException);
 		}
 	}
-	
+
 	private String getKey(String groupName) throws RegBaseCheckedException {
 		String key = null;
-		List<UiSchemaDTO> schemaFields = identitySchemaService.getLatestEffectiveUISchema();
-		for (UiSchemaDTO schemaField : schemaFields) {
+		List<Field> schemaFields = identitySchemaService.getSchemaFields();
+		for (Field schemaField : schemaFields) {
 			if (schemaField.getGroup() != null && schemaField.getGroup().equalsIgnoreCase(groupName)) {
 
 				if (groupName.equalsIgnoreCase(RegistrationConstants.UI_SCHEMA_GROUP_FULL_NAME)) {
-					key = key == null ? schemaField.getId() : key.concat(RegistrationConstants.COMMA).concat(schemaField.getId());
+					key = key == null ? schemaField.getId()
+							: key.concat(RegistrationConstants.COMMA).concat(schemaField.getId());
 				} else {
 					key = schemaField.getId();
 					return key;
@@ -161,7 +166,8 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		String value = null;
 		if (fieldValue instanceof List<?>) {
 			Optional<SimpleDto> demoValueInRequiredLang = ((List<SimpleDto>) fieldValue).stream()
-					.filter(valueDTO -> valueDTO.getLanguage().equals(ApplicationContext.applicationLanguage())).findFirst();
+					.filter(valueDTO -> valueDTO.getLanguage().equals(ApplicationContext.applicationLanguage()))
+					.findFirst();
 
 			if (demoValueInRequiredLang.isPresent() && demoValueInRequiredLang.get().getValue() != null) {
 				value = demoValueInRequiredLang.get().getValue();
@@ -208,7 +214,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 			registrationTxn.setCrBy(SessionContext.userContext().getUserId());
 			registrationTxn.setCrDtime(timestamp);
 			registrationTransaction.add(registrationTxn);
-			
+
 			registration.setRegistrationTransaction(registrationTransaction);
 
 			LOGGER.info("REGISTRATION - UPDATE_STATUS - REGISTRATION_DAO", APPLICATION_NAME, APPLICATION_ID,
@@ -316,8 +322,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 	/**
 	 * Builds the registration transaction.
 	 *
-	 * @param registrationPacket
-	 *            the registration packet
+	 * @param registrationPacket the registration packet
 	 * @return the list
 	 */
 	private List<RegistrationTransaction> buildRegistrationTransaction(Registration registrationPacket) {
@@ -423,7 +428,7 @@ public class RegistrationDAOImpl implements RegistrationDAO {
 		return registrationRepository.findByClientStatusCodeInOrServerStatusCodeOrderByUpdDtimesDesc(clientStatus,
 				serverStatus);
 	}
-	
+
 	@Override
 	public List<Registration> fetchReRegisterPendingPackets() {
 
