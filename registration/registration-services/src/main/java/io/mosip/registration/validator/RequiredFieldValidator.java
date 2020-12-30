@@ -44,7 +44,7 @@ public class RequiredFieldValidator {
 		if (schemaField == null)
 			return required;
 		required = schemaField.isRequired();
-		if(schemaField.getRequiredOn() != null && !schemaField.getRequiredOn().isEmpty()) {
+		if (schemaField.getRequiredOn() != null && !schemaField.getRequiredOn().isEmpty()) {
 			required = isRequiredField(schemaField.getRequiredOn(), registrationDTO);
 		}
 		return required;
@@ -72,28 +72,34 @@ public class RequiredFieldValidator {
 
 	public List<String> isRequiredBiometricField(String subType, RegistrationDTO registrationDTO)
 			throws RegBaseCheckedException {
-		List<String> requiredAttributes = new ArrayList<String>();
 		List<Field> fields = identitySchemaService.getSchemaFields().stream()
 				.filter(field -> field.getType() != null
 						&& PacketManagerConstants.BIOMETRICS_DATATYPE.equals(field.getType())
 						&& field.getSubType() != null && field.getSubType().equals(subType))
 				.collect(Collectors.toList());
 
-		for (Field schemaField : fields) {
-			if (isRequiredField(schemaField, registrationDTO) && schemaField.getBioAttributes() != null)
-				requiredAttributes.addAll(schemaField.getBioAttributes());
-		}
+		return getRequiredAttributes(subType, fields, registrationDTO);
+	}
 
-		// Reg-client will capture the face of Infant and send it in Packet as part of
-		// IndividualBiometrics CBEFF (If Face is captured for the country)
-		if ((registrationDTO.isChild() && APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))
-				|| (registrationDTO.getRegistrationCategory().equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_UPDATE)
-						&& registrationDTO.getUpdatableFieldGroups().contains("GuardianDetails")
-						&& APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))) {
-			return Arrays.asList("face"); // Only capture face
+	public List<String> getRequiredAttributes(String subType, List<Field> fields, RegistrationDTO registrationDTO)
+			throws RegBaseCheckedException {
+		List<String> requiredAttributes = new ArrayList<String>();
+
+		if (fields != null && !fields.isEmpty()) {
+			for (Field schemaField : fields) {
+				if (isRequiredField(schemaField, registrationDTO) && schemaField.getBioAttributes() != null)
+					requiredAttributes.addAll(schemaField.getBioAttributes());
+			}
+
+			if ((registrationDTO.isChild() && APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))
+					|| (registrationDTO.getRegistrationCategory()
+							.equalsIgnoreCase(RegistrationConstants.PACKET_TYPE_UPDATE)
+							&& registrationDTO.getUpdatableFieldGroups().contains("GuardianDetails")
+							&& APPLICANT_SUBTYPE.equals(subType) && requiredAttributes.contains("face"))) {
+				return Arrays.asList("face"); // Only capture face
+			}
 		}
 
 		return requiredAttributes;
 	}
-
 }

@@ -78,7 +78,6 @@ public class RegistrationPreviewController extends BaseController implements Ini
 
 	private String consentText;
 
-
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		Image backInWhite = new Image(getClass().getResourceAsStream(RegistrationConstants.BACK_FOCUSED));
@@ -116,15 +115,9 @@ public class RegistrationPreviewController extends BaseController implements Ini
 	public void goToPrevPage(ActionEvent event) {
 		auditFactory.audit(AuditEvent.REG_PREVIEW_BACK, Components.REG_PREVIEW, SessionContext.userId(),
 				AuditReferenceIdTypes.USER_ID.getReferenceTypeId());
-		// if (getRegistrationDTOFromSession().getSelectionListDTO() != null) {
-		// SessionContext.map().put(RegistrationConstants.UIN_UPDATE_REGISTRATIONPREVIEW,
-		// false);
-		//
-		// updateUINFlowMethod();
-		// }
-		registrationController.showCurrentPage(RegistrationConstants.REGISTRATION_PREVIEW,
-				getPageByAction(RegistrationConstants.REGISTRATION_PREVIEW, RegistrationConstants.PREVIOUS));
-		guardianBiometricsController.populateBiometricPage(false, true);
+		registrationController.showPreviousPage(pageFlow.getCurrentScreenName(), pageFlow.getPreviousScreenName());
+		pageFlow.updatePrevious();
+//		guardianBiometricsController.populateBiometricPage(false, true);
 		/*
 		 * } else { registrationController.showCurrentPage(RegistrationConstants.
 		 * REGISTRATION_PREVIEW,

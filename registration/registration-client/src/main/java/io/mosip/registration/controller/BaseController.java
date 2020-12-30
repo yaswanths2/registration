@@ -60,6 +60,7 @@ import io.mosip.registration.dto.biometric.BiometricInfoDTO;
 import io.mosip.registration.dto.biometric.FaceDetailsDTO;
 import io.mosip.registration.dto.schema.Group;
 import io.mosip.registration.dto.schema.SchemaDTO;
+import io.mosip.registration.dto.schema.Screen;
 import io.mosip.registration.exception.RegBaseCheckedException;
 import io.mosip.registration.scheduler.SchedulerUtil;
 import io.mosip.registration.service.IdentitySchemaService;
@@ -108,7 +109,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -233,9 +233,15 @@ public class BaseController {
 
 	private static Map<String, Field> validationMap;
 
-	private static Map<String, List<io.mosip.registration.dto.schema.Screen>> uiSchemaScreenMap = new LinkedHashMap<>();
+	private static Map<String, List<Screen>> uiSchemaScreenMap = new LinkedHashMap<>();
 
 	private static Map<String, Field> uiSchemaFieldMap = new LinkedHashMap<>();
+
+	private static List<Screen> screenList = new LinkedList<>();
+
+	public static List<Screen> getScreenList() {
+		return screenList;
+	}
 
 	public static Map<String, Field> getLatestSchemaMap() {
 		return uiSchemaFieldMap;
@@ -289,10 +295,10 @@ public class BaseController {
 	/**
 	 * Set Latest Validations map
 	 * 
-	 * @param validations is a map id's and regex validations
+	 * @param uiScreenMap is a map id's and regex validations
 	 */
-	public void setUiSchemaScreenMap(Map<String, List<io.mosip.registration.dto.schema.Screen>> validations) {
-		uiSchemaScreenMap = validations;
+	public void setUiSchemaScreenMap(Map<String, List<io.mosip.registration.dto.schema.Screen>> uiScreenMap) {
+		uiSchemaScreenMap = uiScreenMap;
 	}
 
 	public Map<String, Field> getUiSchemaFieldMap() {
@@ -499,7 +505,7 @@ public class BaseController {
 					RegistrationConstants.PAGE_NAVIGATION_CONFIRM, RegistrationConstants.PAGE_NAVIGATION_CANCEL);
 
 			alert.show();
-			Rectangle2D screenSize = Screen.getPrimary().getVisualBounds();
+			Rectangle2D screenSize = javafx.stage.Screen.getPrimary().getVisualBounds();
 			Double xValue = screenSize.getWidth() / 2 - alert.getWidth() + 250;
 			Double yValue = screenSize.getHeight() / 2 - alert.getHeight();
 			alert.hide();
@@ -1570,34 +1576,37 @@ public class BaseController {
 	public void loadUiSchema() {
 		try {
 
+			uiSchemaScreenMap.clear();
+			uiSchemaFieldMap.clear();
+			PageFlow.getUiSchemaPageFlow().clear();
 			SchemaDTO schema = identitySchemaService.getLatestEffectiveUISchema();
 			Map<String, io.mosip.registration.dto.schema.Screen> validationsMap = new LinkedHashMap<>();
+
+			screenList = schema.getScreens();
 			for (io.mosip.registration.dto.schema.Screen screen : schema.getScreens()) {
 
 				PageFlow.getUiSchemaPageFlow().put(screen.getOrder(), screen.getName());
 
-				List<io.mosip.registration.dto.schema.Screen> screenList = new LinkedList<>();
+				List<io.mosip.registration.dto.schema.Screen> screens = new LinkedList<>();
 
-				// THIS IS NOT REQUIRED
-				/*
-				 * ApplicationContext.map().put(RegistrationConstants.indBiometrics,
-				 * getBioAttributesBySubType(RegistrationConstants.indBiometrics));
-				 * ApplicationContext.map().put("parentOrGuardianBiometrics",
-				 * getBioAttributesBySubType("parentOrGuardianBiometrics"));
-				 */
 				if (uiSchemaScreenMap.containsKey(screen.getName())
 						&& uiSchemaScreenMap.get(screen.getName()) != null) {
-					screenList = uiSchemaScreenMap.get(screen.getName());
+					screens = uiSchemaScreenMap.get(screen.getName());
 				}
-				screenList.add(screen);
-				uiSchemaScreenMap.put(screen.getName(), screenList);
+				screens.add(screen);
+				uiSchemaScreenMap.put(screen.getName(), screens);
 
 				getSchemaFromScreen(screen);
 //				if (screen.getType().equals(PacketManagerConstants.BIOMETRICS_DATATYPE)) {
 //					mapOfbiometricSubtypes.put(schemaField.getSubType(), schemaField.getLabel().get("primary"));
 //				}
 			}
-			validations.setUiSchemaScreenMap(uiSchemaScreenMap); // Set Validations Map
+			setUiSchemaScreenMap(uiSchemaScreenMap); // Set Validations Map
+			PageFlow.getUiSchemaPageFlow().put(PageFlow.getUiSchemaPageFlow().lastKey() + 1,
+					RegistrationConstants.REGISTRATION_PREVIEW);
+//			PageFlow.getUiSchemaPageFlow().put(PageFlow.getUiSchemaPageFlow().lastKey() + 1,
+//					RegistrationConstants.OPERATOR_AUTHENTICATION);
+
 		} catch (RegBaseCheckedException e) {
 			LOGGER.error(LoggerConstants.LOG_REG_BASE, APPLICATION_NAME, APPLICATION_ID,
 					ExceptionUtils.getStackTrace(e));
@@ -2000,4 +2009,38 @@ public class BaseController {
 		return null;
 	}
 
+	protected Map<String, List<List<String>>> getconfigureAndNonConfiguredBioAttributes(
+			List<Entry<String, List<String>>> entryListConstantAttributes, List<Field> groupFields) {
+
+		Map<String, List<List<String>>> modalityMap = new HashMap<>();
+
+		try {
+
+			String subType = groupFields.get(0).getSubType();
+			/** Fetch Bio Attributes */
+			List<String> configuredBioAttributes = requiredFieldValidator.getRequiredAttributes(subType, groupFields,
+					getRegistrationDTOFromSession());
+
+			if (configuredBioAttributes != null && !configuredBioAttributes.isEmpty()) {
+				for (Entry<String, List<String>> constantAttributes : entryListConstantAttributes) {
+					List<String> nonConfigBiometrics = new LinkedList<>();
+					List<String> configBiometrics = new LinkedList<>();
+					String slabType = constantAttributes.getKey();
+					for (String attribute : constantAttributes.getValue()) {
+						if (!configuredBioAttributes.contains(attribute)) {
+							nonConfigBiometrics.add(attribute);
+						} else {
+							configBiometrics.add(attribute);
+						}
+					}
+					modalityMap.put(slabType, Arrays.asList(configBiometrics, nonConfigBiometrics));
+				}
+			}
+		} catch (RegBaseCheckedException exception) {
+			LOGGER.error("REGISTRATION - ALERT - BASE_CONTROLLER", APPLICATION_NAME, APPLICATION_ID,
+					ExceptionUtils.getStackTrace(exception));
+		}
+
+		return modalityMap;
+	}
 }

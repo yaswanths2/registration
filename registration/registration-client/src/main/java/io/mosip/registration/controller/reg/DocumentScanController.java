@@ -1424,32 +1424,6 @@ public class DocumentScanController extends BaseController {
 		registrationController.showCurrentPage(prevScreen, pageFlow.getNextScreenName());
 
 		guardianBiometricsController.populateBiometricPage(false, false);
-		/*
-		 * biometricExceptionController.disableNextBtn();
-		 * fingerPrintCaptureController.clearImage();
-		 * irisCaptureController.clearIrisBasedOnExceptions();
-		 * //guardianBiometricsController.manageBiometricsListBasedOnExceptions();
-		 *
-		 * if (getRegistrationDTOFromSession().getSelectionListDTO() != null) { //TODO
-		 * document pane validation Anusha if (true) {
-		 * SessionContext.map().put(RegistrationConstants.UIN_UPDATE_DOCUMENTSCAN,
-		 * false); updateUINMethodFlow(); demographicDetailController.saveDetail();
-		 * registrationController.showCurrentPage(RegistrationConstants.DOCUMENT_SCAN,
-		 * getPageByAction(RegistrationConstants.DOCUMENT_SCAN,
-		 * RegistrationConstants.NEXT));
-		 * //registrationController.showUINUpdateCurrentPage(); } } else { if
-		 * (RegistrationConstants.ENABLE
-		 * .equalsIgnoreCase(getValueFromApplicationContext(RegistrationConstants.
-		 * DOC_DISABLE_FLAG))) { if (true) {
-		 * registrationController.showCurrentPage(RegistrationConstants.DOCUMENT_SCAN,
-		 * getPageByAction(RegistrationConstants.DOCUMENT_SCAN,
-		 * RegistrationConstants.NEXT)); } } else {
-		 * registrationController.showCurrentPage(RegistrationConstants.DOCUMENT_SCAN,
-		 * getPageByAction(RegistrationConstants.DOCUMENT_SCAN,
-		 * RegistrationConstants.NEXT));
-		 *
-		 * } }
-		 */
 
 	}
 

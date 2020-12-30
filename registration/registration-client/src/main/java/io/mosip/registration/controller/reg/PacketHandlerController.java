@@ -141,7 +141,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 				String latestUpdateTime = timestamps.stream().sorted((timestamp1, timestamp2) -> Timestamp
 						.valueOf(timestamp2).compareTo(Timestamp.valueOf(timestamp1))).findFirst().get();
-				
+
 				lastSyncTime.setText(getLocalZoneTime(latestUpdateTime));
 
 				setLastPreRegPacketDownloadedTime();
@@ -270,13 +270,13 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	@Autowired
 	private AuthTokenUtilService authTokenUtilService;
-	
+
 	@FXML
 	private ImageView uploadPacketImageView;
-	
+
 	@FXML
 	private ImageView remapImageView;
-	
+
 	@FXML
 	private ImageView checkUpdatesImageView;
 
@@ -338,8 +338,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 			}
 			Timestamp ts = userOnboardService.getLastUpdatedTime(SessionContext.userId());
 			if (ts != null) {
-				lastBiometricTime.setText(RegistrationUIConstants.LAST_DOWNLOADED + " "
-						+ getLocalZoneTime(ts.toString()));
+				lastBiometricTime
+						.setText(RegistrationUIConstants.LAST_DOWNLOADED + " " + getLocalZoneTime(ts.toString()));
 			}
 
 			if (!(getValueFromApplicationContext(RegistrationConstants.LOST_UIN_CONFIG_FLAG))
@@ -436,14 +436,14 @@ public class PacketHandlerController extends BaseController implements Initializ
 				uploadPacketImageView.setImage(
 						new Image(getClass().getResourceAsStream(RegistrationConstants.UPDATE_OP_BIOMETRICS_FOCUSED)));
 			} else {
-				uploadPacketImageView
-						.setImage(new Image(getClass().getResourceAsStream(RegistrationConstants.UPDATE_OP_BIOMETRICS_IMAGE)));
+				uploadPacketImageView.setImage(
+						new Image(getClass().getResourceAsStream(RegistrationConstants.UPDATE_OP_BIOMETRICS_IMAGE)));
 			}
 		});
 		centerRemapPane.hoverProperty().addListener((ov, oldValue, newValue) -> {
 			if (newValue) {
-				remapImageView.setImage(
-						new Image(getClass().getResourceAsStream(RegistrationConstants.SYNC_DATA_FOCUSED)));
+				remapImageView
+						.setImage(new Image(getClass().getResourceAsStream(RegistrationConstants.SYNC_DATA_FOCUSED)));
 			} else {
 				remapImageView
 						.setImage(new Image(getClass().getResourceAsStream(RegistrationConstants.SYNC_DATA_IMAGE)));
@@ -454,8 +454,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 				checkUpdatesImageView.setImage(
 						new Image(getClass().getResourceAsStream(RegistrationConstants.DOWNLOAD_PREREG_FOCUSED)));
 			} else {
-				checkUpdatesImageView
-						.setImage(new Image(getClass().getResourceAsStream(RegistrationConstants.DOWNLOAD_PREREG_IMAGE)));
+				checkUpdatesImageView.setImage(
+						new Image(getClass().getResourceAsStream(RegistrationConstants.DOWNLOAD_PREREG_IMAGE)));
 			}
 		});
 	}
@@ -466,6 +466,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 */
 	public void createPacket() {
 
+		pageFlow.resetPageFlow();
 		if (getCenterAndMachineActiveStatus()) {
 
 			if (isPrimaryOrSecondaryLanguageEmpty()) {
@@ -531,6 +532,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 	 */
 	public void lostUIN() {
 
+		pageFlow.resetPageFlow();
 		if (getCenterAndMachineActiveStatus()) {
 
 			if (isPrimaryOrSecondaryLanguageEmpty()) {
@@ -620,7 +622,8 @@ public class PacketHandlerController extends BaseController implements Initializ
 			RegistrationDTO registrationDTO = getRegistrationDTOFromSession();
 
 			String platformLanguageCode = ApplicationContext.applicationLanguage();
-			String ackTemplateText = templateService.getHtmlTemplate(ACKNOWLEDGEMENT_TEMPLATE_CODE, platformLanguageCode);
+			String ackTemplateText = templateService.getHtmlTemplate(ACKNOWLEDGEMENT_TEMPLATE_CODE,
+					platformLanguageCode);
 
 			if (ApplicationContext.applicationLanguage().equalsIgnoreCase(ApplicationContext.localLanguage())) {
 				ackTemplateText = ackTemplateText.replace("} / ${", "}  ${");
@@ -764,6 +767,7 @@ public class PacketHandlerController extends BaseController implements Initializ
 
 	public void updateUIN() {
 
+		pageFlow.resetPageFlow();
 		if (getCenterAndMachineActiveStatus()) {
 
 			if (isPrimaryOrSecondaryLanguageEmpty()) {
@@ -1077,7 +1081,6 @@ public class PacketHandlerController extends BaseController implements Initializ
 		return policySyncService.checkKeyValidation();
 
 	}
-
 
 	public ProgressIndicator getProgressIndicator() {
 		return progressIndicator;
