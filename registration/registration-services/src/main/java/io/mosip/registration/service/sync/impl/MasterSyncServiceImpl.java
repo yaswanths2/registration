@@ -691,6 +691,8 @@ public class MasterSyncServiceImpl extends BaseService implements MasterSyncServ
 
 					globalParamService.update(RegistrationConstants.MACHINE_INACTIVE_FLAG,
 							isMachineInActive ? RegistrationConstants.TRUE : RegistrationConstants.FALSE);
+
+					setErrorResponse(responseDTO, errorMsg(masterSyncResponse), null);
 				} else {
 					setErrorResponse(responseDTO, errorMsg(masterSyncResponse), null);
 				}

@@ -20,3 +20,7 @@ delete from reg.device_type;
 delete from reg.device_spec;
 delete from reg.device_master;
 delete from reg.user_token;
+
+DELETE FROM reg.global_param where code='mosip.registration.machinecenterchanged';
+DELETE FROM reg.global_param where code='mosip.registration.machine.inactive';
+UPDATE reg.global_param set val='Y' where code'mosip.registration.initial_setup';

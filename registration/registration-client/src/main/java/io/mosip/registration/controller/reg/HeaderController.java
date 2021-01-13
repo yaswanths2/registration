@@ -430,10 +430,18 @@ public class HeaderController extends BaseController {
 
 							try {
 
-								responseDTO = userDetailService.save(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
 								responseDTO = masterSyncService.getMasterSync(
 										RegistrationConstants.OPT_TO_REG_MDS_J00001,
 										RegistrationConstants.JOB_TRIGGER_POINT_USER);
+
+								if (!centerMachineReMapService.isMachineRemapped()
+										&& !centerMachineReMapService.isMachineInActive()) {
+
+									responseDTO = userDetailService
+											.save(RegistrationConstants.JOB_TRIGGER_POINT_SYSTEM);
+
+								}
+
 							} catch (Exception exception) {
 								LOGGER.error("REGISTRATION - REDIRECTHOME - HEADER_CONTROLLER", APPLICATION_NAME,
 										APPLICATION_ID, ExceptionUtils.getStackTrace(exception));
