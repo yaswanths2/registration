@@ -1,12 +1,26 @@
 package io.mosip.registration.processor.stages.validator.impl;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
 import io.mosip.kernel.biometrics.entities.BiometricRecord;
+import io.mosip.kernel.core.cbeffutil.exception.CbeffException;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.exception.JsonProcessingException;
 import io.mosip.registration.processor.core.constant.LoggerFileConstant;
 import io.mosip.registration.processor.core.constant.MappingJsonConstants;
+import io.mosip.registration.processor.core.constant.ProviderStageName;
 import io.mosip.registration.processor.core.constant.RegistrationType;
 import io.mosip.registration.processor.core.exception.ApisResourceAccessException;
+import io.mosip.registration.processor.core.exception.PacketManagerException;
 import io.mosip.registration.processor.core.exception.RegistrationProcessorCheckedException;
 import io.mosip.registration.processor.core.exception.util.PlatformErrorMessages;
 import io.mosip.registration.processor.core.logger.RegProcessorLogger;
@@ -16,22 +30,13 @@ import io.mosip.registration.processor.core.status.util.StatusUtil;
 import io.mosip.registration.processor.packet.manager.idreposervice.IdRepoService;
 import io.mosip.registration.processor.packet.storage.dto.ValidatePacketResponse;
 import io.mosip.registration.processor.packet.storage.exception.IdRepoAppException;
-import io.mosip.registration.processor.core.exception.PacketManagerException;
-import io.mosip.registration.processor.packet.storage.utils.PacketManagerService;
+import io.mosip.registration.processor.packet.storage.utils.PriorityBasedPacketManagerService;
 import io.mosip.registration.processor.packet.storage.utils.Utilities;
 import io.mosip.registration.processor.stages.utils.ApplicantDocumentValidation;
 import io.mosip.registration.processor.stages.utils.MandatoryValidation;
 import io.mosip.registration.processor.stages.utils.MasterDataValidation;
+import io.mosip.registration.processor.stages.utils.BiometricsXSDValidator;
 import io.mosip.registration.processor.status.code.RegistrationStatusCode;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 @Component
 @RefreshScope
@@ -47,7 +52,7 @@ public class PacketValidatorImpl implements PacketValidator {
     private static final String VALIDATEAPPLICANTDOCUMENT = "registration.processor.validateApplicantDocument";
 
     @Autowired
-    private PacketManagerService packetManagerService;
+    private PriorityBasedPacketManagerService packetManagerService;
 
     @Autowired
     private Utilities utility;
@@ -60,6 +65,9 @@ public class PacketValidatorImpl implements PacketValidator {
 
     @Autowired
     private MandatoryValidation mandatoryValidation;
+    
+    @Autowired
+    private BiometricsXSDValidator biometricsXSDValidator;
 
     @Autowired
     private MasterDataValidation masterDataValidation;
@@ -67,17 +75,11 @@ public class PacketValidatorImpl implements PacketValidator {
     @Autowired
     private ApplicantDocumentValidation applicantDocumentValidation;
 
-    @Value("${packet.default.source}")
-    private String source;
-
-    @Value("${registration.processor.sourcepackets}")
-    private String sourcepackets;
-
     @Override
     public boolean validate(String id, String process, PacketValidationDto packetValidationDto) throws ApisResourceAccessException, RegistrationProcessorCheckedException, IOException, JsonProcessingException, PacketManagerException {
         String uin = null;
         try {
-            ValidatePacketResponse response = packetManagerService.validate(id, process);
+            ValidatePacketResponse response = packetManagerService.validate(id, process, ProviderStageName.PACKET_VALIDATOR);
             if (!response.isValid()) {
                 regProcLogger.error(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REGISTRATIONID.toString(),
                         id, "ERROR =======>" + StatusUtil.PACKET_MANAGER_VALIDATION_FAILURE.getMessage());
@@ -97,7 +99,7 @@ public class PacketValidatorImpl implements PacketValidator {
 
             if (process.equalsIgnoreCase(RegistrationType.UPDATE.toString())
                     || process.equalsIgnoreCase(RegistrationType.RES_UPDATE.toString())) {
-                uin = utility.getUIn(id, process);
+                uin = utility.getUIn(id, process, ProviderStageName.PACKET_VALIDATOR);
                 if (uin == null) {
                     regProcLogger.error(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REGISTRATIONID.toString(),
                             id, "ERROR =======>" + PlatformErrorMessages.RPR_PVM_INVALID_UIN.getMessage());
@@ -119,7 +121,7 @@ public class PacketValidatorImpl implements PacketValidator {
                 }
             }
 
-            if (!masterDataValidation(id, source, process, packetValidationDto)) {
+            if (!masterDataValidation(id, process, packetValidationDto)) {
                 regProcLogger.error(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REGISTRATIONID.toString(),
                         id, "ERROR =======>" + StatusUtil.MASTER_DATA_VALIDATION_FAILED.getMessage());
                 packetValidationDto.setPacketValidaionFailureMessage(StatusUtil.MASTER_DATA_VALIDATION_FAILED.getMessage());
@@ -148,11 +150,17 @@ public class PacketValidatorImpl implements PacketValidator {
             }
 
             if (RegistrationType.NEW.name().equalsIgnoreCase(process)
-                    && !mandatoryValidation(id, source, process, packetValidationDto)) {
+                    && !mandatoryValidation(id, process, packetValidationDto)) {
                 regProcLogger.error(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REGISTRATIONID.toString(),
                         id, "ERROR =======> " + StatusUtil.MANDATORY_VALIDATION_FAILED.getMessage());
                 packetValidationDto.setPacketValidaionFailureMessage(StatusUtil.MANDATORY_VALIDATION_FAILED.getMessage());
                 packetValidationDto.setPacketValidatonStatusCode(StatusUtil.MANDATORY_VALIDATION_FAILED.getCode());
+                return false;
+            }
+            
+            if ( !biometricsXSDValidation(id, process, packetValidationDto)) {
+                regProcLogger.error(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.REGISTRATIONID.toString(),
+                        id, "ERROR =======> " + StatusUtil.XSD_VALIDATION_EXCEPTION.getMessage());
                 return false;
             }
         } catch (PacketManagerException e) {
@@ -166,9 +174,35 @@ public class PacketValidatorImpl implements PacketValidator {
         return packetValidationDto.isValid();
     }
 
-    private boolean individualBiometricsValidation(String id, String process) throws RegistrationProcessorCheckedException {
+    private boolean biometricsXSDValidation(String id, String process, PacketValidationDto packetValidationDto) throws ApisResourceAccessException, PacketManagerException, JsonProcessingException, IOException, RegistrationProcessorCheckedException {
+    	List<String> fields=Arrays.asList( MappingJsonConstants.INDIVIDUAL_BIOMETRICS, MappingJsonConstants.AUTHENTICATION_BIOMETRICS
+    			, MappingJsonConstants.PARENT_OR_GUARDIAN_BIO, MappingJsonConstants.OFFICERBIOMETRICFILENAME, MappingJsonConstants.SUPERVISORBIOMETRICFILENAME);
+    	for(String field:fields) {
+    		String value=packetManagerService.getField(id, field, process, ProviderStageName.PACKET_VALIDATOR);
+    		if(value!=null &&!value.isEmpty()) {
+    			try {
+    	            BiometricRecord biometricRecord = packetManagerService.getBiometricsByMappingJsonKey(
+    	                    id, field, process, ProviderStageName.PACKET_VALIDATOR);
+    	            biometricsXSDValidator.validateXSD(biometricRecord);
+    	             } catch (Exception e) {     
+    	            	 if(e instanceof CbeffException) {
+    	            		 packetValidationDto.setPacketValidaionFailureMessage(StatusUtil.XSD_VALIDATION_EXCEPTION.getMessage()+e.getMessage());
+    	            		 packetValidationDto.setPacketValidatonStatusCode(StatusUtil.XSD_VALIDATION_EXCEPTION.getCode());
+    	                     return false;
+    	            	 }else {
+    	            		 throw new RegistrationProcessorCheckedException(PlatformErrorMessages.RPR_SYS_IO_EXCEPTION.getCode(),
+    	            				 PlatformErrorMessages.RPR_SYS_IO_EXCEPTION.getMessage(), e);
+    	            	 }
+    	        }
+    		}
+    	}	
+		return true;
+	}
+
+	private boolean individualBiometricsValidation(String id, String process) throws RegistrationProcessorCheckedException {
         try {
-            BiometricRecord biometricRecord = packetManagerService.getBiometrics(id, MappingJsonConstants.INDIVIDUAL_BIOMETRICS, null, process);
+            BiometricRecord biometricRecord = packetManagerService.getBiometricsByMappingJsonKey(
+                    id, MappingJsonConstants.INDIVIDUAL_BIOMETRICS, process, ProviderStageName.PACKET_VALIDATOR);
             return (biometricRecord != null && biometricRecord.getSegments() != null) && biometricRecord.getSegments().size() > 0;
         } catch (Exception e) {
             throw new RegistrationProcessorCheckedException(PlatformErrorMessages.RPR_SYS_IO_EXCEPTION.getCode(),
@@ -176,12 +210,12 @@ public class PacketValidatorImpl implements PacketValidator {
         }
     }
 
-    private boolean masterDataValidation(String id, String source, String process, PacketValidationDto packetValidationDto)
+    private boolean masterDataValidation(String id, String process, PacketValidationDto packetValidationDto)
             throws ApisResourceAccessException, IOException, JsonProcessingException, PacketManagerException {
         if (env.getProperty(VALIDATEMASTERDATA).trim().equalsIgnoreCase(VALIDATIONFALSE)) {
             return true;
         }
-        boolean result = masterDataValidation.validateMasterData(id, source, process);
+        boolean result = masterDataValidation.validateMasterData(id, process);
         if (!result) {
             packetValidationDto.setPacketValidaionFailureMessage(StatusUtil.MASTER_DATA_VALIDATION_FAILED.getMessage());
             packetValidationDto.setPacketValidatonStatusCode(StatusUtil.MASTER_DATA_VALIDATION_FAILED.getCode());
@@ -194,7 +228,7 @@ public class PacketValidatorImpl implements PacketValidator {
 
     }
 
-    private boolean mandatoryValidation(String rid, String source, String process,
+    private boolean mandatoryValidation(String rid, String process,
                                         PacketValidationDto packetValidationDto)
             throws IOException, ApisResourceAccessException, PacketManagerException, JsonProcessingException {
         if (env.getProperty(VALIDATEMANDATORY).trim().equalsIgnoreCase(VALIDATIONFALSE))

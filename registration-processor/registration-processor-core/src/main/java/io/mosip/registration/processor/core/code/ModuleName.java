@@ -17,6 +17,9 @@ public enum ModuleName {
 	/** The packet validator. */
 	PACKET_VALIDATOR,
 
+	/** The packet validator. */
+	PACKET_CLASSIFIER,
+
 	/** The osi validator. */
 	OSI_VALIDATOR,
 
@@ -56,5 +59,11 @@ public enum ModuleName {
 
 	ABIS_MIDDLEWARE,
 
-	REQUEST_HANDLER_SERVICE;
+	REQUEST_HANDLER_SERVICE,
+
+	WORKFLOW_EVENT_UPDATE,
+
+	WORKFLOW_ACTION_SERVICE,
+
+	WORKFLOW_ACTION_API;
 }

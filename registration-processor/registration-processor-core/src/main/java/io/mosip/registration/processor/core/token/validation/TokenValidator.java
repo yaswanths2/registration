@@ -24,6 +24,8 @@ import io.mosip.registration.processor.core.logger.RegProcessorLogger;
 import io.mosip.registration.processor.core.token.validation.dto.TokenResponseDTO;
 import io.mosip.registration.processor.core.token.validation.exception.AccessDeniedException;
 import io.mosip.registration.processor.core.token.validation.exception.InvalidTokenException;
+import io.mosip.registration.processor.core.tracing.ContextualData;
+import io.mosip.registration.processor.core.tracing.TracingConstant;
 import io.mosip.registration.processor.core.util.JsonUtil;
 
 @Service
@@ -43,6 +45,7 @@ public class TokenValidator {
 	@Autowired
 	Environment env;
 
+
 	public void validate(String token, String url) {
 		regProcLogger.debug(LoggerFileConstant.SESSIONID.toString(), LoggerFileConstant.USERID.toString(), "",
 				"TokenValidator::validate()::entry");
@@ -59,6 +62,7 @@ public class TokenValidator {
 				con = (HttpURLConnection) urlConnection;
 			}
 			con.setRequestProperty("Cookie", token);
+			con.setRequestProperty(TracingConstant.TRACE_HEADER, (String) ContextualData.getOrDefault(TracingConstant.TRACE_ID_KEY));
 			con.setRequestMethod("GET");
 
 			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -154,6 +158,12 @@ public class TokenValidator {
 			}
 		} else if (url.contains("requesthandler")) {
 			for (String assignedRole : APIAuthorityList.REQUESTHANDLER.getList()) {
+				if (role.contains(assignedRole))
+					return true;
+			}
+		}
+		else if (url.contains("workflowaction")) {
+			for (String assignedRole : APIAuthorityList.WORKFLOWACTION.getList()) {
 				if (role.contains(assignedRole))
 					return true;
 			}

@@ -24,12 +24,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import io.mosip.kernel.core.logger.spi.Logger;
-import io.mosip.registration.processor.core.abstractverticle.MessageBusAddress;
+import io.mosip.registration.processor.camel.bridge.intercepter.RouteIntercepter;
 import io.mosip.registration.processor.core.abstractverticle.MessageDTO;
 import io.mosip.registration.processor.core.abstractverticle.MosipEventBus;
 import io.mosip.registration.processor.core.abstractverticle.MosipRouter;
 import io.mosip.registration.processor.core.abstractverticle.MosipVerticleAPIManager;
-import io.mosip.registration.processor.core.abstractverticle.MosipVerticleManager;
 import io.mosip.registration.processor.core.constant.LoggerFileConstant;
 import io.mosip.registration.processor.core.exception.UnsupportedEventBusTypeException;
 import io.mosip.registration.processor.core.exception.util.PlatformErrorMessages;
@@ -66,6 +65,9 @@ public class MosipBridgeFactory extends MosipVerticleAPIManager {
 
 	/** The mosip event bus. */
 	MosipEventBus mosipEventBus = null;
+	
+	@Autowired
+	private RouteIntercepter routeIntercepter;
 
 	/** Mosip router for APIs */
 	@Autowired
@@ -142,7 +144,8 @@ public class MosipBridgeFactory extends MosipVerticleAPIManager {
 			responseEntity = restTemplate.exchange(camelRoutesUrl, HttpMethod.GET, null,
 	                Resource.class);
 			routes = camelContext.loadRoutesDefinition(responseEntity.getBody().getInputStream());
-			camelContext.addRouteDefinitions(routes.getRoutes());
+			camelContext.addRouteDefinitions(routeIntercepter.intercept(camelContext, routes.getRoutes()));
+			//camelContext.addRouteDefinitions(routes.getRoutes());
 		}
 		if(eventBusType.equals("vertx")) {
 			VertxComponent vertxComponent = new VertxComponent();
@@ -155,6 +158,8 @@ public class MosipBridgeFactory extends MosipVerticleAPIManager {
 			kafkaConfiguration.setBrokers(kafkaBootstrapServers);
 			kafkaComponent.setConfiguration(kafkaConfiguration);
 			camelContext.addComponent("eventbus", kafkaComponent);
+			camelContext.setUseMDCLogging(true);
+			camelContext.setUnitOfWorkFactory(CustomMDCUnitOfWork::new);
 		} else
 			throw new UnsupportedEventBusTypeException(
 				PlatformErrorMessages.RPR_CMB_CONFIGURATION_SERVER_FAILURE_EXCEPTION);

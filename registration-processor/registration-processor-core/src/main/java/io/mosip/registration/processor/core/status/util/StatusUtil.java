@@ -21,7 +21,8 @@ public enum StatusUtil {
 	PACKET_HASHCODE_VALIDATION_FAILED(StatusConstants.PACKET_UPLOADER_MODULE_FAILED + "005","Packet Hash Code Validation Failed"),
 	VIRUS_SCANNER_FAILED_UPLOADER(StatusConstants.PACKET_UPLOADER_MODULE_FAILED + "006","Packet is Virus Infected"),
 	PACKET_UPLOAD_DECRYPTION_FAILED(StatusConstants.PACKET_UPLOADER_MODULE_FAILED + "007", "Packet Decryption Failed"),
-
+	PACKET_RETRY_CNT_EXCEEDED(StatusConstants.PACKET_UPLOADER_MODULE_FAILED + "008", "Retry count has exceeded the maximum limit specified"),
+	
 	// Quality checker stage
 	INDIVIDUAL_BIOMETRIC_NOT_FOUND(StatusConstants.QUALITY_CHECKER_MODULE_SUCCESS + "001","Individual Biometric Parameter Not Found in ID JSON"), 
 	BIOMETRIC_QUALITY_CHECK_SUCCESS(StatusConstants.QUALITY_CHECKER_MODULE_SUCCESS + "002","Biometric Quality Check is Successful"),
@@ -43,6 +44,10 @@ public enum StatusUtil {
 	PACKET_MANAGER_VALIDATION_FAILURE(StatusConstants.PACKET_VALIDATOR_MODULE_FAILED + "012", "Packet validation failed in packet manager"),
 	BIOMETRICS_VALIDATION_FAILURE(StatusConstants.PACKET_VALIDATOR_MODULE_FAILED + "013", "Biometric file validation failed"),
 	PACKET_MANAGER_EXCEPTION(StatusConstants.PACKET_VALIDATOR_MODULE_FAILED + "014", "Exception occured in packet manager."),
+	XSD_VALIDATION_EXCEPTION(StatusConstants.PACKET_VALIDATOR_MODULE_FAILED + "015", "XSD validation failed."),
+
+	// packet classifier stage
+	PACKET_CLASSIFICATION_SUCCESS(StatusConstants.PACKET_CLASSIFIER_MODULE_SUCCESS + "001","Packet Classification is Successful"),
 
 	// External stage
 	EXTERNAL_STAGE_SUCCESS(StatusConstants.EXTERNAL_SATGE_MODULE_SUCCESS + "001", "Packet processing in External stage is sucessful"),
@@ -208,7 +213,8 @@ public enum StatusUtil {
     MESSAGE_SENDER_SMS_SUCCESS(StatusConstants.MESSAGE_SENDER_NOTIF_SUCCESS_CODE + "004","SMS Notification was sent"),
     MESSAGE_SENDER_EMAIL_FAILED(StatusConstants.MESSAGE_SENDER__FAILED_CODE + "005","Notification was not sent as the required mode of channel was not available"),
     MESSAGE_SENDER_SMS_FAILED(StatusConstants.MESSAGE_SENDER__FAILED_CODE + "006","Notification was not sent as the required mode of channel was not available"),
-    MESSAGE_SENDER_NOTIFICATION_FAILED(StatusConstants.MESSAGE_SENDER__FAILED_CODE + "006","Notification was not sent as the required mode of channel was not available");
+    MESSAGE_SENDER_NOTIFICATION_FAILED(StatusConstants.MESSAGE_SENDER__FAILED_CODE + "006","Notification was not sent as the required mode of channel was not available"),
+    VID_CREATION_FAILED(StatusConstants.UIN_GENERATOR_MODULE_FAILED + "009", "VID creation failed -");
 
 	private final String statusComment;
 	private final String statusCode;

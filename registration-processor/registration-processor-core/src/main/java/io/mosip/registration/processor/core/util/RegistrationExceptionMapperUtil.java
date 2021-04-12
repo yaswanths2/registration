@@ -46,6 +46,8 @@ public class RegistrationExceptionMapperUtil {
         statusMap.put(RegistrationExceptionTypeCode.VIRUS_SCANNER_SERVICE_FAILED, RegistrationTransactionStatusCode.FAILED);
         statusMap.put(RegistrationExceptionTypeCode.PACKET_DECRYPTION_FAILURE_EXCEPTION,
                 RegistrationTransactionStatusCode.ERROR);
+        statusMap.put(RegistrationExceptionTypeCode.PACKET_HASH_VALIDATION_FAILED,
+                RegistrationTransactionStatusCode.ERROR);
         statusMap.put(RegistrationExceptionTypeCode.PACKET_MANAGER_EXCEPTION, RegistrationTransactionStatusCode.REPROCESS);
         statusMap.put(RegistrationExceptionTypeCode.EXCEPTION, RegistrationTransactionStatusCode.ERROR);
         statusMap.put(RegistrationExceptionTypeCode.DUPLICATE_UPLOAD_REQUEST_EXCEPTION,
@@ -116,6 +118,8 @@ public class RegistrationExceptionMapperUtil {
         statusMap.put(RegistrationExceptionTypeCode.PACKET_UPLOADER_FAILED, RegistrationTransactionStatusCode.FAILED);
         statusMap.put(RegistrationExceptionTypeCode.PACKET_UIN_GENERATION_FAILED,
                 RegistrationTransactionStatusCode.FAILED);
+        statusMap.put(RegistrationExceptionTypeCode.PACKET_UIN_GENERATION_RPROCESS,
+                RegistrationTransactionStatusCode.REPROCESS);
         statusMap.put(RegistrationExceptionTypeCode.BASE_UNCHECKED_EXCEPTION, RegistrationTransactionStatusCode.ERROR);
         statusMap.put(RegistrationExceptionTypeCode.BASE_CHECKED_EXCEPTION, RegistrationTransactionStatusCode.ERROR);
         statusMap.put(RegistrationExceptionTypeCode.EXTERNAL_INTEGRATION_FAILED,
@@ -133,6 +137,8 @@ public class RegistrationExceptionMapperUtil {
         statusMap.put(RegistrationExceptionTypeCode.OSI_FAILED_REJECTED_PARENT,
                 RegistrationTransactionStatusCode.FAILED);
         statusMap.put(RegistrationExceptionTypeCode.SUPERVISORID_AND_OFFICERID_NOT_PRESENT_IN_PACKET,
+                RegistrationTransactionStatusCode.FAILED);
+        statusMap.put(RegistrationExceptionTypeCode.PACKET_UPLOAD_FAILED_ON_MAX_RETRY_CNT,
                 RegistrationTransactionStatusCode.FAILED);
         statusMap.put(RegistrationExceptionTypeCode.PACKET_CREATION_DATE_NOT_PRESENT_IN_PACKET,
                 RegistrationTransactionStatusCode.FAILED);
@@ -156,7 +162,8 @@ public class RegistrationExceptionMapperUtil {
                 RegistrationTransactionStatusCode.REPROCESS);
         statusMap.put(RegistrationExceptionTypeCode.AUTH_SYSTEM_EXCEPTION,
                 RegistrationTransactionStatusCode.REPROCESS);
-
+        statusMap.put(RegistrationExceptionTypeCode.VID_CREATION_EXCEPTION,
+				RegistrationTransactionStatusCode.REPROCESS);
         statusMap.put(RegistrationExceptionTypeCode.PACKET_REJECTED, RegistrationTransactionStatusCode.REJECTED);
 
         return unmodifiableMap;
