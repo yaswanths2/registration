@@ -86,6 +86,10 @@ public class SyncRegistrationEntity extends BaseRegistrationEntity {
 	/** The deleted date time. */
 	@Column(name = "del_dtimes")
 	private LocalDateTime deletedDateTime;
+	
+	/** The Reference Id */
+	@Column(name = "ref_id")
+	private String referenceId;
 
 	/**
 	 * Instantiates a new sync registration entity.
@@ -396,6 +400,15 @@ public class SyncRegistrationEntity extends BaseRegistrationEntity {
 	 */
 	public void setDeletedDateTime(LocalDateTime deletedDateTime) {
 		this.deletedDateTime = deletedDateTime;
+	}
+
+
+	public String getReferenceId() {
+		return referenceId;
+	}
+
+	public void setReferenceId(String referenceId) {
+		this.referenceId = referenceId;
 	}
 
 }
